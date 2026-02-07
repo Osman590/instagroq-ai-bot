@@ -11,9 +11,36 @@ html,body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;
 }
 
-/* iPhone-like фон */
+/* ✅ iOS-style фон (как на картинке) */
 body{
-  background: linear-gradient(180deg,#0a2344 0%, #071a33 40%, #061628 100%);
+  /* основной глубокий синий */
+  background:
+    /* мягкое центральное свечение */
+    radial-gradient(
+      900px 900px at 50% 40%,
+      rgba(90,140,255,.18) 0%,
+      rgba(30,80,160,.10) 35%,
+      rgba(10,35,70,.0) 65%
+    ),
+
+    /* вторичное холодное свечение */
+    radial-gradient(
+      700px 700px at 20% 15%,
+      rgba(70,120,220,.14) 0%,
+      rgba(20,60,120,.0) 60%
+    ),
+
+    /* базовый градиент */
+    linear-gradient(
+      180deg,
+      #0b2d55 0%,
+      #081f3f 45%,
+      #06162b 100%
+    );
+
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
   color:#fff;
   display:flex;
   flex-direction:column;
