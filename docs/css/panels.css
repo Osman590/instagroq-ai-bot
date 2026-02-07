@@ -1,1 +1,151 @@
- 
+/* стеклянная верхняя панель (полностью прозрачная, видно чат под ней) */
+.top{
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 20;
+
+  display:flex;
+  align-items:center;
+  gap:10px;
+
+  /* чуть уже + safe-area сверху */
+  padding: 6px 14px;
+  padding-top: calc(6px + env(safe-area-inset-top));
+
+  /* максимально “glass” */
+  background: rgba(255,255,255,.01);
+  backdrop-filter: blur(32px) saturate(210%);
+  -webkit-backdrop-filter: blur(32px) saturate(210%);
+
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  box-shadow: none;
+
+  flex:0 0 auto;
+}
+
+.top a{
+  color:rgba(210,230,255,.95);
+  text-decoration:none;
+  font-size:16px;
+}
+
+.title{ font-weight:700; font-size:17px; }
+.spacer{ flex:1; }
+
+.gear{
+  width:36px;
+  height:36px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.25);
+  background: rgba(255,255,255,.15);
+  color:#fff;
+  font-size:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+}
+
+/* нижняя панель ввода iOS glass */
+.input{
+  flex:0 0 auto;
+  display:flex;
+  gap:10px;
+  padding:12px;
+  border-top:1px solid rgba(255,255,255,.18);
+  background: rgba(20,35,60,.35);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 -10px 30px rgba(0,0,0,.25);
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
+.input input{
+  flex:1;
+  padding:14px 16px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.22);
+  outline:none;
+  font-size:15px;
+  color:#0b1220;
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 10px 24px rgba(0,0,0,.16);
+  caret-color:#0a84ff;
+}
+
+.input button{
+  padding:0 18px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.14);
+  font-size:16px;
+  font-weight:800;
+  background: linear-gradient(180deg,#3aa0ff 0%, #0a84ff 100%);
+  color:#fff;
+  box-shadow: 0 12px 26px rgba(10,132,255,.22);
+}
+
+/* Настройки (модалка) */
+.overlay{
+  position:fixed;
+  inset:0;
+  background: rgba(0,0,0,.55);
+  display:none;
+  align-items:flex-end;
+  padding:16px;
+  z-index:50;
+}
+
+.sheet{
+  width:100%;
+  border-radius:18px;
+  background: rgba(20,30,45,.94);
+  border:1px solid rgba(255,255,255,.12);
+  padding:14px;
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+}
+
+.sheet h3{
+  margin:0 0 10px 0;
+  font-size:16px;
+  font-weight:800;
+}
+
+.row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 0;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+
+.row:first-of-type{ border-top:none; }
+
+.pill{
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.10);
+  color:#fff;
+  padding:10px 12px;
+  border-radius:14px;
+  font-weight:700;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+
+select{
+  width:170px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.10);
+  color:#fff;
+  outline:none;
+}
+
+option{ color:#000; }
