@@ -14,6 +14,10 @@
   touch-action: manipulation;
 }
 
+/* ============================= */
+/* ✅ ПЛАВНОЕ ПОЯВЛЕНИЕ СООБЩЕНИЙ */
+/* ============================= */
+
 /* пузыри iPhone vibe */
 .msg{
   max-width:78%;
@@ -24,6 +28,23 @@
   white-space:pre-wrap;
   word-break:break-word;
   box-shadow: 0 10px 26px rgba(0,0,0,.18);
+
+  /* ✅ анимация появления */
+  opacity: 0;
+  transform: translateY(6px) scale(0.98);
+  animation: msgIn 0.38s ease-out forwards;
+  will-change: transform, opacity;
+}
+
+/* ✅ чуть медленнее для длинных сообщений (выглядит плавнее) */
+.msg.bot{ animation-duration: 0.42s; }
+.msg.user{ animation-duration: 0.36s; }
+
+@keyframes msgIn{
+  to{
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* bot: стеклянный */
@@ -67,6 +88,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
+  /* ✅ чтобы typing не “вылетал” снизу как обычные сообщения */
+  opacity: 1;
+  animation: none;
 }
 
 /* контейнер точек */
