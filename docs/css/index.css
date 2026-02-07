@@ -281,3 +281,53 @@ body{
   opacity:1;
   transform: scale(1);
 }
+
+/* ============================= */
+/* 🌍 Language overlay animation */
+/* ============================= */
+
+.langOverlay{
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,.35);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .4s ease; /* ⏱ плавность затемнения */
+}
+
+.langOverlay.show{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* нижний стеклянный лист */
+.langSheet{
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  max-height: 40vh;              /* ✅ 40% экрана */
+  overflow-y: auto;
+
+  background: rgba(255,255,255,.10);
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid rgba(255,255,255,.18);
+
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+
+  transform: translateY(22px);
+  opacity: 0;
+
+  transition:
+    transform .45s cubic-bezier(.2,.8,.2,1),
+    opacity .35s ease;
+}
+
+.langOverlay.show .langSheet{
+  transform: translateY(0);
+  opacity: 1;
+}
