@@ -40,7 +40,7 @@ def is_valid_https_url(url: str) -> bool:
 
 # ---------- FLASK API ----------
 api = Flask(__name__)
-
+CORS(api)
 
 @api.get("/health")
 def health():
