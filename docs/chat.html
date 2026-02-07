@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>AI Chat</title>
   <style>
+    :root{
+      --vh: 100vh;
+    }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif}
     body{
@@ -12,6 +15,8 @@
       color:#fff;
       display:flex;
       flex-direction:column;
+      height: var(--vh);
+      overflow:hidden;
     }
     .top{
       display:flex;
@@ -21,23 +26,19 @@
       border-bottom:1px solid rgba(255,255,255,.08);
       background: rgba(0,0,0,.25);
       backdrop-filter: blur(8px);
+      flex:0 0 auto;
     }
-    .top a{
-      color:#9cc8ff;
-      text-decoration:none;
-      font-size:16px;
-    }
-    .title{
-      font-weight:700;
-      font-size:17px;
-    }
+    .top a{color:#9cc8ff;text-decoration:none;font-size:16px}
+    .title{font-weight:700;font-size:17px}
     .chat{
-      flex:1;
+      flex:1 1 auto;
       padding:16px;
       overflow-y:auto;
+      -webkit-overflow-scrolling: touch;
       display:flex;
       flex-direction:column;
       gap:12px;
+      min-height:0; /* важно для iOS */
     }
     .msg{
       max-width:78%;
@@ -45,22 +46,19 @@
       border-radius:16px;
       line-height:1.35;
       font-size:15px;
+      white-space:pre-wrap;
+      word-break:break-word;
     }
-    .bot{
-      align-self:flex-start;
-      background: rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.14);
-    }
-    .user{
-      align-self:flex-end;
-      background: linear-gradient(180deg,#4da3ff,#2f6bff);
-    }
+    .bot{align-self:flex-start;background: rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14)}
+    .user{align-self:flex-end;background: linear-gradient(180deg,#4da3ff,#2f6bff)}
     .input{
+      flex:0 0 auto;
       display:flex;
       gap:10px;
       padding:12px;
       border-top:1px solid rgba(255,255,255,.08);
       background: rgba(0,0,0,.35);
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
     }
     .input input{
       flex:1;
@@ -80,6 +78,9 @@
       color:#fff;
     }
   </style>
+
+  <!-- Telegram WebApp API -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
 
@@ -93,21 +94,56 @@
   </div>
 
   <div class="input">
-    <input id="text" placeholder="Напиши сообщение…" />
-    <button onclick="send()">▶</button>
+    <input id="text" placeholder="Напиши сообщение…" autocomplete="off" />
+    <button id="sendBtn">▶</button>
   </div>
 
   <script>
+    const tg = window.Telegram?.WebApp;
+
+    // 1) Просим Telegram раскрыть мини-апп на максимум
+    if (tg) {
+      tg.ready();
+      tg.expand(); // убирает "половину" и раскрывает
+      // tg.requestFullscreen?.(); // иногда доступно, но expand обычно хватает
+    }
+
+    // 2) Борьба с дерганьем: используем tg viewport height, если доступно
+    function applyViewportHeight() {
+      if (tg && typeof tg.viewportHeight === "number") {
+        document.documentElement.style.setProperty("--vh", tg.viewportHeight + "px");
+      } else {
+        // запасной вариант
+        document.documentElement.style.setProperty("--vh", window.innerHeight + "px");
+      }
+    }
+
+    applyViewportHeight();
+
+    // Telegram шлёт событие при открытии/закрытии клавиатуры
+    if (tg && tg.onEvent) {
+      tg.onEvent("viewportChanged", () => {
+        applyViewportHeight();
+        // мягко удерживаем чат внизу
+        requestAnimationFrame(() => {
+          chat.scrollTop = chat.scrollHeight;
+        });
+      });
+    } else {
+      // fallback для браузера
+      window.addEventListener("resize", () => {
+        applyViewportHeight();
+        requestAnimationFrame(() => {
+          chat.scrollTop = chat.scrollHeight;
+        });
+      });
+    }
+
+    // ----- чат логика -----
     const chat = document.getElementById("chat");
     const input = document.getElementById("text");
+    const sendBtn = document.getElementById("sendBtn");
 
-    function send(){
-      const t = input.value.trim();
-      if(!t) return;
-      add("user", t);
-      input.value = "";
-      setTimeout(()=>add("bot","🤖 Принял. Могу разложить по шагам.\n\n\""+t+"\""), 500);
-    }
     function add(type, text){
       const d = document.createElement("div");
       d.className = "msg " + type;
@@ -115,6 +151,27 @@
       chat.appendChild(d);
       chat.scrollTop = chat.scrollHeight;
     }
+
+    function send(){
+      const t = input.value.trim();
+      if(!t) return;
+      add("user", t);
+      input.value = "";
+      setTimeout(()=>add("bot","🤖 Принял. Могу разложить по шагам.\n\n\""+t+"\""), 250);
+    }
+
+    sendBtn.addEventListener("click", send);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") send();
+    });
+
+    // При фокусе на инпуте тоже чуть подстрахуемся
+    input.addEventListener("focus", () => {
+      setTimeout(() => {
+        applyViewportHeight();
+        chat.scrollTop = chat.scrollHeight;
+      }, 50);
+    });
   </script>
 
 </body>
