@@ -28,7 +28,7 @@ GROQ_MODEL = (os.getenv("GROQ_MODEL") or "llama-3.1-8b-instant").strip()
 # ✅ ВАЖНО: это URL ФРОНТА (GitHub Pages), а не Railway домен
 MINIAPP_URL = (os.getenv("MINIAPP_URL") or "").strip()
 
-PORT = int(os.getenv("PORT") or "8000")
+PORT = int(os.environ["PORT"])
 
 
 # ---------- GROQ CLIENT ----------
