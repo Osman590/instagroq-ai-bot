@@ -31,22 +31,14 @@
   display:flex;
   align-items:center;
   gap:10px;
+  padding:8px 14px;
 
-  /* сделаем уже/тоньше как iOS */
-  padding:8px 12px;
-
-  /* реально прозрачная “стекляшка” (ВАЖНО: не 0, иначе blur почти не видно) */
-  background: rgba(255,255,255,.06);
-
-  /* iOS glass */
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-
-  /* тонкая светлая граница как на iOS */
-  border-bottom: 1px solid rgba(255,255,255,.12);
-
-  /* мягкая тень */
-  box-shadow: 0 10px 26px rgba(0,0,0,.22);
+  /* ⬇️ ВОТ ОНИ */
+  background: rgba(255,255,255,.02);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  box-shadow: none;
 
   flex:0 0 auto;
 }
