@@ -13,8 +13,12 @@
     :root{ --vh: 100vh; }
     *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
     html,body{ height:100%; margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif; }
+
     body{
-      background: linear-gradient(180deg,#0b1f33,#071726);
+      /* ✅ темно-голубой фон */
+      background: radial-gradient(900px 600px at 30% 15%, rgba(61,156,255,.18) 0%, transparent 55%),
+                  radial-gradient(900px 650px at 70% 85%, rgba(35,96,180,.18) 0%, transparent 55%),
+                  linear-gradient(180deg,#061d33,#041527);
       color:#fff;
       display:flex;
       flex-direction:column;
@@ -24,14 +28,16 @@
       -webkit-text-size-adjust: 100%;
     }
 
+    /* ✅ стеклянные панели */
     .top{
       display:flex;
       align-items:center;
       gap:10px;
       padding:14px 16px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.25);
-      backdrop-filter: blur(8px);
+      border-bottom:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      backdrop-filter: blur(14px) saturate(140%);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
       flex:0 0 auto;
     }
     .top a{ color:#9cc8ff; text-decoration:none; font-size:16px; }
@@ -41,8 +47,8 @@
     .gear{
       width:36px; height:36px;
       border-radius:12px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.10);
       color:#fff;
       font-size:18px;
       display:flex;
@@ -71,25 +77,39 @@
       white-space:pre-wrap;
       word-break:break-word;
     }
-    .bot{ align-self:flex-start; background: rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.14); }
-    .user{ align-self:flex-end; background: linear-gradient(180deg,#4da3ff,#2f6bff); }
+    .bot{
+      align-self:flex-start;
+      background: rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.14);
+    }
+    .user{
+      align-self:flex-end;
+      background: linear-gradient(180deg,#4da3ff,#2f6bff);
+    }
 
     .input{
       flex:0 0 auto;
       display:flex;
       gap:10px;
       padding:12px;
-      border-top:1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.35);
+      border-top:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      backdrop-filter: blur(14px) saturate(140%);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
       padding-bottom: calc(12px + env(safe-area-inset-bottom));
     }
     .input input{
       flex:1;
       padding:14px;
       border-radius:14px;
-      border:none;
+      border:1px solid rgba(255,255,255,.12);
       outline:none;
       font-size:15px;
+
+      /* ✅ курсор-палочка + нормальный текст */
+      background: rgba(255,255,255,.92);
+      color:#071726;
+      caret-color:#2f6bff;
     }
     .input button{
       padding:0 18px;
@@ -118,6 +138,7 @@
       border:1px solid rgba(255,255,255,.10);
       padding:14px;
       backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
     .sheet h3{
       margin:0 0 10px 0;
@@ -191,12 +212,12 @@
         </select>
       </div>
 
-      <!-- ✅ ДОБАВЛЕНО: характер -->
+      <!-- ✅ НОВОЕ: характер -->
       <div class="row">
         <div>Характер</div>
         <select id="personaSel">
-          <option value="friendly">Общительный</option>
-          <option value="funny">Веселый</option>
+          <option value="social">Общительный</option>
+          <option value="fun">Весёлый</option>
           <option value="strict">Строгий</option>
           <option value="smart">Умный</option>
         </select>
@@ -222,6 +243,10 @@
     const API_BASE = "https://instagroq-ai-bot-production.up.railway.app";
     const API_CHAT = API_BASE + "/api/chat";
 
+    // ✅ Хранилище истории
+    const HISTORY_KEY = "chat_history_v1";
+    const MAX_HISTORY = 80;
+
     // Fullscreen / viewport fixes
     if (tg) {
       tg.ready();
@@ -237,6 +262,11 @@
     }
     applyViewportHeight();
 
+    // Chat elements
+    const chat = document.getElementById("chat");
+    const input = document.getElementById("text");
+    const sendBtn = document.getElementById("sendBtn");
+
     if (tg && tg.onEvent) {
       tg.onEvent("viewportChanged", () => {
         applyViewportHeight();
@@ -249,36 +279,77 @@
       });
     }
 
-    // Chat logic
-    const chat = document.getElementById("chat");
-    const input = document.getElementById("text");
-    const sendBtn = document.getElementById("sendBtn");
+    function safeParseJSON(s) {
+      try { return JSON.parse(s); } catch { return null; }
+    }
 
-    function add(type, text){
+    function saveHistory() {
+      const items = [];
+      const nodes = chat.querySelectorAll(".msg");
+      nodes.forEach(n => {
+        const isUser = n.classList.contains("user");
+        const isBot = n.classList.contains("bot");
+        const type = isUser ? "user" : (isBot ? "bot" : "");
+        if (!type) return;
+        const text = (n.textContent || "").trim();
+        if (!text) return;
+        items.push({ type, text });
+      });
+
+      const trimmed = items.slice(-MAX_HISTORY);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+    }
+
+    function restoreHistory() {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      const data = safeParseJSON(raw);
+      if (!Array.isArray(data) || data.length === 0) return false;
+
+      chat.innerHTML = "";
+      data.forEach(m => {
+        if (!m || (m.type !== "user" && m.type !== "bot")) return;
+        add(m.type, m.text, true);
+      });
+      requestAnimationFrame(() => chat.scrollTop = chat.scrollHeight);
+      return true;
+    }
+
+    function add(type, text, skipSave=false){
       const d = document.createElement("div");
       d.className = "msg " + type;
       d.textContent = text;
       chat.appendChild(d);
       chat.scrollTop = chat.scrollHeight;
+      if (!skipSave) saveHistory();
     }
 
-    function personaPrefix(){
-      const p = localStorage.getItem("ai_persona") || "friendly";
-      if (p === "funny")   return "Отвечай весело, легко, можно с мягким юмором, но без грубости. ";
-      if (p === "strict")  return "Отвечай строго и по делу, без лишних слов и эмоций. ";
-      if (p === "smart")   return "Отвечай умно и точно, формулируй ясно, без воды. ";
-      return "Отвечай дружелюбно и общительно. ";
-    }
-
+    // ✅ стиль ответа
     function stylePrefix(){
       const style = localStorage.getItem("ai_style") || "steps";
-      if (style === "short")  return "Ответь кратко и по делу. ";
-      if (style === "detail") return "Ответь подробно. ";
+      if (style === "short")  return "Ответь максимально коротко и по делу. ";
+      if (style === "detail") return "Ответь подробно, с пояснениями. ";
       return "Ответь по шагам. ";
     }
 
+    // ✅ характер (реально меняет поведение)
+    function personaPrefix(){
+      const p = localStorage.getItem("ai_persona") || "social";
+
+      if (p === "fun") {
+        return "Ты весёлый, общительный ассистент. Добавляй лёгкий юмор и живой тон, но не уходи от сути. ";
+      }
+      if (p === "strict") {
+        return "Ты строгий ассистент: отвечай сухо, чётко, без лишних эмоций и воды. ";
+      }
+      if (p === "smart") {
+        return "Ты очень умный эксперт: отвечай точно, логично и структурированно. ";
+      }
+      // social
+      return "Ты дружелюбный, общительный ассистент: отвечай естественно и поддерживающе. ";
+    }
+
     async function askAI(userText){
-      // Мы не меняем твой backend, поэтому просто “вплетаем” стиль/характер в текст
+      // Мы не меняем backend, поэтому “вплетаем” стиль+характер в текст
       const prompt = personaPrefix() + stylePrefix() + userText;
 
       const r = await fetch(API_CHAT, {
@@ -317,16 +388,18 @@
 
         // удаляем “⌛ Думаю...”
         const last = chat.lastElementChild;
-        if (last && last.classList.contains("msg") && last.classList.contains("bot") && last.textContent.includes("⌛")) {
+        if (last && last.classList.contains("msg") && last.classList.contains("bot") && (last.textContent || "").includes("⌛")) {
           last.remove();
+          saveHistory();
         }
 
         add("bot", answer || "⚠️ Пустой ответ от API.");
       } catch(e){
         // удаляем “⌛ Думаю...”
         const last = chat.lastElementChild;
-        if (last && last.classList.contains("msg") && last.classList.contains("bot") && last.textContent.includes("⌛")) {
+        if (last && last.classList.contains("msg") && last.classList.contains("bot") && (last.textContent || "").includes("⌛")) {
           last.remove();
+          saveHistory();
         }
         add("bot", "❌ Ошибка: " + (e?.message || e));
       } finally{
@@ -367,13 +440,9 @@
     const styleSel = document.getElementById("styleSel");
     const personaSel = document.getElementById("personaSel");
 
-    // init style
-    const savedStyle = localStorage.getItem("ai_style") || "steps";
-    styleSel.value = savedStyle;
-
-    // ✅ init persona
-    const savedPersona = localStorage.getItem("ai_persona") || "friendly";
-    personaSel.value = savedPersona;
+    // init style + persona
+    styleSel.value = localStorage.getItem("ai_style") || "steps";
+    personaSel.value = localStorage.getItem("ai_persona") || "social";
 
     gearBtn.addEventListener("click", () => {
       overlay.style.display = "flex";
@@ -388,18 +457,15 @@
       localStorage.setItem("ai_style", styleSel.value);
     });
 
-    // ✅ сохраняем характер
     personaSel.addEventListener("change", () => {
       localStorage.setItem("ai_persona", personaSel.value);
     });
 
-    // ✅ подтверждение очистки (Telegram confirm если есть, иначе обычный confirm)
     function confirmClear(cb){
-      const text = "Вы уверены, что хотите очистить чат?";
       if (tg && typeof tg.showConfirm === "function") {
-        tg.showConfirm(text, (ok) => cb(!!ok));
+        tg.showConfirm("Вы уверены, что хотите очистить чат?", (ok) => cb(!!ok));
       } else {
-        cb(window.confirm(text));
+        cb(window.confirm("Вы уверены, что хотите очистить чат?"));
       }
     }
 
@@ -407,9 +473,17 @@
       confirmClear((ok) => {
         if (!ok) return;
         chat.innerHTML = `<div class="msg bot">👋 Привет! Я ИИ. Напиши что-нибудь.</div>`;
+        localStorage.removeItem(HISTORY_KEY);
         overlay.style.display = "none";
       });
     });
+
+    // ✅ Восстанавливаем историю при входе
+    const restored = restoreHistory();
+    if (!restored) {
+      // если истории нет — сохраняем стартовое сообщение
+      saveHistory();
+    }
   </script>
 </body>
 </html>
