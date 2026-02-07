@@ -23,6 +23,32 @@ export function createChatController({ chatEl, inputEl, sendBtnEl }) {
   let history = loadHistory();
   let sending = false;
 
+  // --- typing indicator helpers ---
+  const TYPING_ID = "typing-indicator";
+
+  function removeTyping(){
+    const el = document.getElementById(TYPING_ID);
+    if (el) el.remove();
+  }
+
+  function addTyping(){
+    // не дублируем
+    removeTyping();
+
+    const d = document.createElement("div");
+    d.id = TYPING_ID;
+    d.className = "msg bot typing";
+    d.innerHTML = `
+      <span class="typing-dots" aria-label="typing">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </span>
+    `;
+    chatEl.appendChild(d);
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+
   function add(type, text, persist=true){
     const d = document.createElement("div");
     d.className = "msg " + type;
@@ -93,7 +119,8 @@ export function createChatController({ chatEl, inputEl, sendBtnEl }) {
     add("user", t, true);
     inputEl.value = "";
 
-    add("bot", "⌛ Думаю...", false);
+    // ✅ вместо "⌛ Думаю..." — стеклянные точки
+    addTyping();
 
     try{
       const prompt =
@@ -104,17 +131,12 @@ export function createChatController({ chatEl, inputEl, sendBtnEl }) {
 
       const answer = await askAI(prompt);
 
-      const last = chatEl.lastElementChild;
-      if (last && last.classList.contains("msg") && last.classList.contains("bot") && last.textContent.includes("⌛")) {
-        last.remove();
-      }
+      // убрать typing
+      removeTyping();
 
       add("bot", answer || "⚠️ Пустой ответ от API.", true);
     } catch(e){
-      const last = chatEl.lastElementChild;
-      if (last && last.classList.contains("msg") && last.classList.contains("bot") && last.textContent.includes("⌛")) {
-        last.remove();
-      }
+      removeTyping();
       add("bot", "❌ Ошибка: " + (e?.message || e), true);
     } finally{
       sending = false;
