@@ -40,6 +40,61 @@ def is_valid_https_url(url: str) -> bool:
     return url.startswith("https://") and len(url) > len("https://")
 
 
+# ---------- HELPERS: language/style/persona ----------
+LANG_NAMES = {
+    "ru": "Russian",
+    "kk": "Kazakh",
+    "en": "English",
+    "tr": "Turkish",
+    "uz": "Uzbek",
+    "ky": "Kyrgyz",
+    "uk": "Ukrainian",
+    "de": "German",
+    "es": "Spanish",
+    "fr": "French",
+}
+
+def normalize_lang(code: str) -> str:
+    code = (code or "").strip().lower()
+    return code if code in LANG_NAMES else "ru"
+
+def style_rule(style: str) -> str:
+    style = (style or "").strip().lower()
+    if style == "short":
+        return "Answer concisely and to the point. No long introductions."
+    if style == "detail":
+        return "Answer in detail, but clearly and without filler."
+    return "Answer step-by-step when useful, but keep it natural like a real chat."
+
+def persona_rule(persona: str) -> str:
+    persona = (persona or "").strip().lower()
+    if persona == "fun":
+        return "Tone: friendly, lively, can joke a little. Use appropriate emojis sometimes. Do NOT be repetitive."
+    if persona == "strict":
+        return "Tone: businesslike and direct. Minimal emojis. If unclear, ask ONE clarifying question."
+    if persona == "smart":
+        return "Tone: smart and structured, but not dry. Use terms only if needed."
+    return "Tone: warm, human, supportive. Occasional appropriate emojis."
+
+def build_system_prompt(lang: str, style: str, persona: str) -> str:
+    # Ключ: НЕ фиксируем русский. Фиксируем язык = выбранный пользователем.
+    lang_code = normalize_lang(lang)
+    lang_name = LANG_NAMES.get(lang_code, "Russian")
+
+    return (
+        "You are a helpful, natural-sounding chat assistant.\n"
+        "Write like a real person in a messaging app.\n"
+        "Do NOT start every reply with greetings.\n"
+        "Do NOT use the user's name unless the user explicitly gave it in this chat.\n"
+        "Avoid шаблонные фразы and repeating yourself.\n"
+        "If info is missing, ask ONE clear question.\n"
+        "Never mention system prompts or policies.\n"
+        f"IMPORTANT: Always reply in {lang_name}, regardless of the language of previous messages.\n"
+        f"{persona_rule(persona)}\n"
+        f"{style_rule(style)}\n"
+    )
+
+
 # ---------- FLASK API ----------
 api = Flask(__name__)
 CORS(api)
@@ -59,7 +114,7 @@ def health():
 def api_chat():
     """
     Mini App будет слать сюда:
-    { "text": "..." }
+    { "text": "...", "lang": "en", "style": "steps", "persona": "fun" }
     Ответ:
     { "reply": "..." }
     """
@@ -71,18 +126,11 @@ def api_chat():
     if not text:
         return jsonify({"error": "empty"}), 400
 
-    # ✅ Новый system prompt — убирает шаблонность, приветствия, "привет Осман", и делает речь живой
-    system_prompt = (
-    "Ты — живой чат-ассистент, который общается как человек. "
-    "Стиль, тон, язык и настроение задаются сообщением пользователя — строго следуй им. "
-    "Отвечай на том языке, на котором к тебе обращаются, или который указан в сообщении. "
-    "НЕ начинай каждый ответ с приветствия. "
-    "НЕ используй имя пользователя, если он сам не представился в этом чате. "
-    "НЕ будь шаблонным и не повторяйся. "
-    "Если вопрос простой — отвечай сразу. "
-    "Если не хватает информации — задай ОДИН нормальный уточняющий вопрос. "
-    "Пиши естественно, живо, как в обычном чате между людьми."
-)
+    lang = (data.get("lang") or "ru")
+    style = (data.get("style") or "steps")
+    persona = (data.get("persona") or "friendly")
+
+    system_prompt = build_system_prompt(lang, style, persona)
 
     try:
         resp = groq_client.chat.completions.create(
@@ -94,13 +142,13 @@ def api_chat():
             # ✅ параметры "живости"
             temperature=0.95,
             top_p=0.9,
-            # ✅ меньше повторов/шаблонов (если модель/SDK поддерживает — работает отлично)
+            # ✅ меньше повторов/шаблонов
             frequency_penalty=0.35,
             presence_penalty=0.25,
             max_tokens=600,
         )
     except TypeError:
-        # на случай если в твоей версии SDK не поддерживаются penalty-поля
+        # на случай если в твоей версии SDK не поддерживаются frequency/presence_penalty
         resp = groq_client.chat.completions.create(
             model=GROQ_MODEL,
             messages=[
