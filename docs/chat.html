@@ -31,17 +31,22 @@
   display:flex;
   align-items:center;
   gap:10px;
-  padding:14px 16px;
 
-  /* ❗ УБИРАЕМ синий */
-  background: rgba(20,30,45,.25);
+  /* ⬇️ чуть уже, как в iOS */
+  padding:8px 14px;
 
-  /* iOS glass */
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  /* ✅ ПОЛНОСТЬЮ убираем синий оттенок */
+  background: rgba(255,255,255,.06);
 
-  border-bottom: 1px solid rgba(255,255,255,.18);
-  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  /* ✅ настоящий iOS glass */
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+
+  /* тонкая iOS-линия */
+  border-bottom: 0.5px solid rgba(255,255,255,.25);
+
+  /* мягкая тень, не синяя */
+  box-shadow: 0 6px 20px rgba(0,0,0,.20);
 
   flex:0 0 auto;
 }
