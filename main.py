@@ -59,7 +59,7 @@ def health():
 def api_chat():
     """
     Mini App будет слать сюда:
-    { "text": "привет" }
+    { "text": "..." }
     Ответ:
     { "reply": "..." }
     """
@@ -71,15 +71,45 @@ def api_chat():
     if not text:
         return jsonify({"error": "empty"}), 400
 
-    resp = groq_client.chat.completions.create(
-        model=GROQ_MODEL,
-        messages=[
-            {"role": "system", "content": "Ты полезный ИИ помощник. Отвечай кратко и по делу."},
-            {"role": "user", "content": text},
-        ],
-        temperature=0.7,
-        max_tokens=400,
+    # ✅ Новый system prompt — убирает шаблонность, приветствия, "привет Осман", и делает речь живой
+    system_prompt = (
+        "Ты — живой собеседник в чате, отвечаешь естественно, как человек. "
+        "Не начинай каждый ответ с приветствия. "
+        "Не используй имя пользователя, если он сам не представился в этой переписке. "
+        "Не говори фразы типа «как ИИ», «я не настоящий» и т.п. "
+        "Не повторяй одно и то же. "
+        "Если вопрос простой — отвечай сразу. "
+        "Если не хватает данных — задай ОДИН нормальный уточняющий вопрос. "
+        "Пиши дружелюбно и по делу, без канцелярита."
     )
+
+    try:
+        resp = groq_client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": text},
+            ],
+            # ✅ параметры "живости"
+            temperature=0.95,
+            top_p=0.9,
+            # ✅ меньше повторов/шаблонов (если модель/SDK поддерживает — работает отлично)
+            frequency_penalty=0.35,
+            presence_penalty=0.25,
+            max_tokens=600,
+        )
+    except TypeError:
+        # на случай если в твоей версии SDK не поддерживаются penalty-поля
+        resp = groq_client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": text},
+            ],
+            temperature=0.95,
+            top_p=0.9,
+            max_tokens=600,
+        )
 
     answer = resp.choices[0].message.content or ""
     return jsonify({"reply": answer})
