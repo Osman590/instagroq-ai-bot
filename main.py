@@ -3,7 +3,7 @@ import threading
 from typing import Any, Dict
 
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # ✅ ВОТ ЭТОГО У ТЕБЯ НЕ ХВАТАЛО
+from flask_cors import CORS
 
 from groq import Groq
 
@@ -28,7 +28,8 @@ GROQ_MODEL = (os.getenv("GROQ_MODEL") or "llama-3.1-8b-instant").strip()
 # ✅ ВАЖНО: это URL ФРОНТА (GitHub Pages), а не Railway домен
 MINIAPP_URL = (os.getenv("MINIAPP_URL") or "").strip()
 
-PORT = int(os.environ["PORT"])
+# ✅ Railway сам задаёт PORT (часто 8080). На всякий случай есть fallback.
+PORT = int(os.getenv("PORT") or "8000")
 
 
 # ---------- GROQ CLIENT ----------
@@ -41,7 +42,12 @@ def is_valid_https_url(url: str) -> bool:
 
 # ---------- FLASK API ----------
 api = Flask(__name__)
-CORS(api)  # ✅ теперь импорт есть, всё ок
+CORS(api)
+
+
+@api.get("/")
+def root():
+    return "ok"
 
 
 @api.get("/health")
@@ -80,7 +86,6 @@ def api_chat():
 
 
 def run_flask():
-    # без reloader, иначе будет второй процесс и всё ломается
     api.run(host="0.0.0.0", port=PORT, debug=False, use_reloader=False)
 
 
@@ -119,7 +124,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-
     data = query.data or ""
 
     if data == "miniapp_not_set":
@@ -156,16 +160,15 @@ def main():
     if not GROQ_API_KEY:
         print("WARNING: GROQ_API_KEY is not set (Mini App /api/chat will fail)")
 
-    # ✅ Flask в отдельном потоке (так Railway увидит порт)
+    # Flask в отдельном потоке
     t = threading.Thread(target=run_flask, daemon=True)
     t.start()
 
-    # ✅ Telegram в главном потоке
+    # Telegram в главном потоке
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(on_button))
 
-    # ✅ stop_signals=None — чтобы не ловить ошибки сигналов в Railway
     app.run_polling(stop_signals=None, close_loop=False)
 
 
