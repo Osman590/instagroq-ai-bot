@@ -1,1 +1,24 @@
- 
+:root{ --vh: 100vh; }
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,body{
+  height:100%;
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+}
+
+/* iPhone-like фон */
+body{
+  background: linear-gradient(180deg,#0a2344 0%, #071a33 40%, #061628 100%);
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  height: var(--vh);
+  overflow:hidden;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
