@@ -282,51 +282,42 @@ body{
   transform: scale(1);
 }
 
-/* ============================= */
-/* 🌍 Language overlay animation */
-/* ============================= */
+/* ================================ */
+/* 🍎 iOS-style language bottom sheet */
+/* ================================ */
 
-.langOverlay{
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: rgba(0,0,0,.35);
-
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .4s ease; /* ⏱ плавность затемнения */
-}
-
-.langOverlay.show{
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* нижний стеклянный лист */
 .langSheet{
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
 
   max-height: 40vh;              /* ✅ 40% экрана */
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 
-  background: rgba(255,255,255,.10);
-  border-radius: 24px 24px 0 0;
-  border-top: 1px solid rgba(255,255,255,.18);
+  background: rgba(20, 80, 140, .55);
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 24px;
 
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
 
-  transform: translateY(22px);
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.45),
+    0 0 0 1px rgba(255,255,255,.06) inset;
+
+  /* ⬇️ стартовое состояние (закрыт) */
+  transform: translateY(110%);
   opacity: 0;
 
+  /* ✅ плавная и медленная анимация */
   transition:
-    transform .45s cubic-bezier(.2,.8,.2,1),
-    opacity .35s ease;
+    transform .45s cubic-bezier(.22,.8,.22,1),
+    opacity   .35s ease;
 }
 
+/* ✅ когда открыт */
 .langOverlay.show .langSheet{
   transform: translateY(0);
   opacity: 1;
