@@ -42,37 +42,50 @@
   border: 1px solid rgba(255,255,255,.10);
 }
 
-/* ✅ typing (стеклянные 3 точки) */
-.typing{
-  /* чуть “выше” визуально */
+/* ============================= */
+/* ✅ typing bubble (iOS style) */
+/* ============================= */
+
+.msg.bot.typing{
+  align-self: flex-start;
   margin-bottom: 6px;
   transform: translateY(-4px);
 
-  /* компактнее пузырь */
   padding: 6px 10px;
-  max-width: 72px;
+  max-width: 64px;
 
-  /* сильнее стекло */
   background: rgba(255,255,255,.12);
   border: 1px solid rgba(255,255,255,.18);
+
+  border-radius: 16px;
+
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
+
+  box-shadow: 0 8px 18px rgba(0,0,0,.18);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* контейнер точек */
 .typing-dots{
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-/* точки: крупнее, “стеклянные” */
+/* точки */
 .typing .dot{
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: rgba(255,255,255,.85);
-  box-shadow: 0 0 0 1px rgba(255,255,255,.25) inset, 0 8px 18px rgba(0,0,0,.18);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.25) inset,
+    0 8px 18px rgba(0,0,0,.18);
+
   opacity: .45;
   transform: translateY(0);
   animation: typingPulse 1.1s infinite ease-in-out;
@@ -82,6 +95,12 @@
 .typing .dot:nth-child(3){ animation-delay: .30s; }
 
 @keyframes typingPulse{
-  0%, 100% { opacity: .40; transform: translateY(0) scale(1); }
-  50%      { opacity: .95; transform: translateY(-2px) scale(1.15); }
+  0%, 100% {
+    opacity: .40;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: .95;
+    transform: translateY(-2px) scale(1.15);
+  }
 }
