@@ -206,6 +206,11 @@
   <script>
     const tg = window.Telegram?.WebApp;
 
+    // ✅ ВАЖНО: поставь СВОЙ Railway домен (без / в конце)
+    // пример: https://instagroq-ai-bot-production.up.railway.app
+    const API_BASE = "https://instagroq-ai-bot-production.up.railway.app";
+    const API_CHAT = API_BASE + "/api/chat";
+
     // Fullscreen / viewport fixes
     if (tg) {
       tg.ready();
@@ -246,20 +251,69 @@
       chat.scrollTop = chat.scrollHeight;
     }
 
-    function replyTemplate(userText){
+    function stylePrefix(){
       const style = localStorage.getItem("ai_style") || "steps";
-      if (style === "short") return `🤖 Ок: "${userText}"`;
-      if (style === "detail") return `🤖 Принял. Сейчас подробно отвечу.\n\n"${userText}"`;
-      return `🤖 Принял. Могу разложить по шагам.\n\n"${userText}"`;
+      if (style === "short")  return "Ответь кратко и по делу. ";
+      if (style === "detail") return "Ответь подробно. ";
+      return "Ответь по шагам. ";
     }
 
-    function send(){
+    async function askAI(userText){
+      // Мы не меняем твой backend, поэтому просто “вплетаем” стиль в текст
+      const prompt = stylePrefix() + userText;
+
+      const r = await fetch(API_CHAT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: prompt })
+      });
+
+      if (!r.ok) {
+        const t = await r.text();
+        throw new Error("API " + r.status + ": " + t);
+      }
+
+      const data = await r.json();
+      return (data.reply || "").trim();
+    }
+
+    let sending = false;
+
+    async function send(){
       const t = input.value.trim();
-      if(!t) return;
+      if(!t || sending) return;
+
+      sending = true;
+      sendBtn.disabled = true;
+
       add("user", t);
       input.value = "";
       input.blur(); // закрываем клавиатуру после отправки (мягко)
-      setTimeout(()=>add("bot", replyTemplate(t)), 250);
+
+      // маленькая “печатает…”
+      add("bot", "⌛ Думаю...");
+
+      try{
+        const answer = await askAI(t);
+
+        // удаляем “⌛ Думаю...”
+        const last = chat.lastElementChild;
+        if (last && last.classList.contains("msg") && last.classList.contains("bot") && last.textContent.includes("⌛")) {
+          last.remove();
+        }
+
+        add("bot", answer || "⚠️ Пустой ответ от API.");
+      } catch(e){
+        // удаляем “⌛ Думаю...”
+        const last = chat.lastElementChild;
+        if (last && last.classList.contains("msg") && last.classList.contains("bot") && last.textContent.includes("⌛")) {
+          last.remove();
+        }
+        add("bot", "❌ Ошибка: " + (e?.message || e));
+      } finally{
+        sending = false;
+        sendBtn.disabled = false;
+      }
     }
 
     sendBtn.addEventListener("click", send);
