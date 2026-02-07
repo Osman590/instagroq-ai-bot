@@ -32,21 +32,21 @@
   align-items:center;
   gap:10px;
 
-  /* ⬇️ чуть уже, как в iOS */
-  padding:8px 14px;
+  /* ещё чуть уже */
+  padding:7px 14px;
 
-  /* ✅ ПОЛНОСТЬЮ убираем синий оттенок */
-  background: rgba(255,255,255,.06);
+  /* 🔥 МАКСИМАЛЬНАЯ прозрачность (iOS-style) */
+  background: rgba(255,255,255,.035);
 
-  /* ✅ настоящий iOS glass */
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  /* сильный blur — эффект стекла */
+  backdrop-filter: blur(34px) saturate(190%);
+  -webkit-backdrop-filter: blur(34px) saturate(190%);
 
-  /* тонкая iOS-линия */
-  border-bottom: 0.5px solid rgba(255,255,255,.25);
+  /* еле заметная линия, как в iOS */
+  border-bottom: 0.5px solid rgba(255,255,255,.18);
 
-  /* мягкая тень, не синяя */
-  box-shadow: 0 6px 20px rgba(0,0,0,.20);
+  /* минимальная, мягкая тень */
+  box-shadow: 0 4px 14px rgba(0,0,0,.18);
 
   flex:0 0 auto;
 }
