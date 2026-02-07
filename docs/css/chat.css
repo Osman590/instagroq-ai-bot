@@ -49,8 +49,8 @@
   transform: translateY(-4px);
 
   /* компактнее пузырь */
-  padding: 10px 14px;
-  max-width: 120px;
+  padding: 6px 10px;
+  max-width: 72px;
 
   /* сильнее стекло */
   background: rgba(255,255,255,.12);
@@ -68,8 +68,8 @@
 
 /* точки: крупнее, “стеклянные” */
 .typing .dot{
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: rgba(255,255,255,.85);
   box-shadow: 0 0 0 1px rgba(255,255,255,.25) inset, 0 8px 18px rgba(0,0,0,.18);
