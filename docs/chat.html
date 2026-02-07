@@ -191,6 +191,17 @@
         </select>
       </div>
 
+      <!-- ✅ ДОБАВЛЕНО: характер -->
+      <div class="row">
+        <div>Характер</div>
+        <select id="personaSel">
+          <option value="friendly">Общительный</option>
+          <option value="funny">Веселый</option>
+          <option value="strict">Строгий</option>
+          <option value="smart">Умный</option>
+        </select>
+      </div>
+
       <div class="row">
         <div>Чат</div>
         <button class="pill" id="clearBtn">🧹 Очистить</button>
@@ -251,6 +262,14 @@
       chat.scrollTop = chat.scrollHeight;
     }
 
+    function personaPrefix(){
+      const p = localStorage.getItem("ai_persona") || "friendly";
+      if (p === "funny")   return "Отвечай весело, легко, можно с мягким юмором, но без грубости. ";
+      if (p === "strict")  return "Отвечай строго и по делу, без лишних слов и эмоций. ";
+      if (p === "smart")   return "Отвечай умно и точно, формулируй ясно, без воды. ";
+      return "Отвечай дружелюбно и общительно. ";
+    }
+
     function stylePrefix(){
       const style = localStorage.getItem("ai_style") || "steps";
       if (style === "short")  return "Ответь кратко и по делу. ";
@@ -259,8 +278,8 @@
     }
 
     async function askAI(userText){
-      // Мы не меняем твой backend, поэтому просто “вплетаем” стиль в текст
-      const prompt = stylePrefix() + userText;
+      // Мы не меняем твой backend, поэтому просто “вплетаем” стиль/характер в текст
+      const prompt = personaPrefix() + stylePrefix() + userText;
 
       const r = await fetch(API_CHAT, {
         method: "POST",
@@ -346,10 +365,15 @@
     const closeSettings = document.getElementById("closeSettings");
     const clearBtn = document.getElementById("clearBtn");
     const styleSel = document.getElementById("styleSel");
+    const personaSel = document.getElementById("personaSel");
 
     // init style
-    const saved = localStorage.getItem("ai_style") || "steps";
-    styleSel.value = saved;
+    const savedStyle = localStorage.getItem("ai_style") || "steps";
+    styleSel.value = savedStyle;
+
+    // ✅ init persona
+    const savedPersona = localStorage.getItem("ai_persona") || "friendly";
+    personaSel.value = savedPersona;
 
     gearBtn.addEventListener("click", () => {
       overlay.style.display = "flex";
@@ -364,9 +388,27 @@
       localStorage.setItem("ai_style", styleSel.value);
     });
 
+    // ✅ сохраняем характер
+    personaSel.addEventListener("change", () => {
+      localStorage.setItem("ai_persona", personaSel.value);
+    });
+
+    // ✅ подтверждение очистки (Telegram confirm если есть, иначе обычный confirm)
+    function confirmClear(cb){
+      const text = "Вы уверены, что хотите очистить чат?";
+      if (tg && typeof tg.showConfirm === "function") {
+        tg.showConfirm(text, (ok) => cb(!!ok));
+      } else {
+        cb(window.confirm(text));
+      }
+    }
+
     clearBtn.addEventListener("click", () => {
-      chat.innerHTML = `<div class="msg bot">👋 Привет! Я ИИ. Напиши что-нибудь.</div>`;
-      overlay.style.display = "none";
+      confirmClear((ok) => {
+        if (!ok) return;
+        chat.innerHTML = `<div class="msg bot">👋 Привет! Я ИИ. Напиши что-нибудь.</div>`;
+        overlay.style.display = "none";
+      });
     });
   </script>
 </body>
