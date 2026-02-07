@@ -290,7 +290,7 @@ body{
   position: absolute;
   left: 12px;
   right: 12px;
-  bottom: 12px;
+  bottom: 60px;
 
   max-height: 40vh;              /* ✅ 40% экрана */
   overflow-y: auto;
