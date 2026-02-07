@@ -1,1 +1,100 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>InstaGroq AI</title>
+  <style>
+    :root{
+      --bg1:#0a2a43;
+      --bg2:#071a2a;
+      --glass: rgba(255,255,255,.08);
+      --stroke: rgba(255,255,255,.18);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.55);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;}
+    body{
+      color:var(--text);
+      background: radial-gradient(1200px 800px at 30% 20%, #1b6ea8 0%, transparent 60%),
+                  radial-gradient(1000px 700px at 70% 80%, #1b3f7a 0%, transparent 55%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      overflow:hidden;
+    }
+    /* floating cubes */
+    .cube{
+      position:absolute;
+      width:120px; height:120px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      border-radius:14px;
+      filter: blur(.0px);
+      animation: float 7s ease-in-out infinite;
+    }
+    .cube.small{width:46px; height:46px; border-radius:10px; opacity:.65; animation-duration:6s}
+    .cube.tiny{width:24px; height:24px; border-radius:8px; opacity:.5; animation-duration:5s}
+    @keyframes float{
+      0%,100%{transform: translateY(0px)}
+      50%{transform: translateY(-18px)}
+    }
 
+    .wrap{
+      position:relative;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .card{
+      width:min(520px, 100%);
+      padding:22px;
+      border-radius:22px;
+      background: rgba(0,0,0,.10);
+      border: 1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(10px);
+    }
+    .btn{
+      display:block;
+      width:100%;
+      text-align:center;
+      padding:18px 16px;
+      border-radius:18px;
+      font-size:22px;
+      font-weight:700;
+      color:var(--text);
+      text-decoration:none;
+      background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.08) inset, 0 14px 40px rgba(0,0,0,.35);
+    }
+    .sub{
+      margin-top:14px;
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+      letter-spacing:.2px;
+    }
+    .sub span{opacity:.9}
+  </style>
+</head>
+<body>
+  <div class="cube" style="left:10%; top:12%"></div>
+  <div class="cube" style="left:62%; top:8%; width:90px; height:90px"></div>
+  <div class="cube small" style="left:78%; top:22%"></div>
+  <div class="cube" style="left:12%; top:60%; width:150px; height:150px"></div>
+  <div class="cube small" style="left:72%; top:66%"></div>
+  <div class="cube tiny" style="left:40%; top:28%"></div>
+  <div class="cube tiny" style="left:55%; top:78%"></div>
+
+  <div class="wrap">
+    <div class="card">
+      <a class="btn" href="./chat.html">Чат с ИИ</a>
+      <div class="sub">
+        <span>Быстрые ответы</span> • <span>Память</span> • <span>Заметки</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
