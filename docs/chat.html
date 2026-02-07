@@ -102,44 +102,43 @@
 
     /* ✅ нижняя панель ввода iOS glass */
     .input{
-      flex:0 0 auto;
-      display:flex;
-      gap:10px;
-      padding:12px;
-      border-top:1px solid rgba(255,255,255,.12);
-      background: rgba(10,18,34,.28);
-      backdrop-filter: blur(20px) saturate(160%);
-      -webkit-backdrop-filter: blur(20px) saturate(160%);
-      padding-bottom: calc(12px + env(safe-area-inset-bottom));
-    }
+  flex:0 0 auto;
+  display:flex;
+  gap:10px;
+  padding:12px;
+  border-top:1px solid rgba(255,255,255,.18);
+  background: rgba(20,35,60,.35);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 -10px 30px rgba(0,0,0,.25);
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
 
     /* поле ввода — “айфоновское”, светлое, мягкое */
     .input input{
-      flex:1;
-      padding:14px 16px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.18);
-      outline:none;
-      font-size:15px;
-      color:#0b1220;
-      background: rgba(255,255,255,.92);
-      box-shadow: 0 10px 24px rgba(0,0,0,.16);
-
-      /* чтобы “палочка” была видна */
-      caret-color:#0a84ff;
-    }
+  flex:1;
+  padding:14px 16px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.22);
+  outline:none;
+  font-size:15px;
+  color:#0b1220;
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 10px 24px rgba(0,0,0,.16);
+  caret-color:#0a84ff;
+}
 
     /* кнопка отправки — как iOS (сильнее “премиум”) */
     .input button{
-      padding:0 18px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.14);
-      font-size:16px;
-      font-weight:800;
-      background: linear-gradient(180deg,#3aa0ff 0%, #0a84ff 100%);
-      color:#fff;
-      box-shadow: 0 12px 26px rgba(10,132,255,.22);
-    }
+  padding:0 18px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.14);
+  font-size:16px;
+  font-weight:800;
+  background: linear-gradient(180deg,#3aa0ff 0%, #0a84ff 100%);
+  color:#fff;
+  box-shadow: 0 12px 26px rgba(10,132,255,.22);
+}
 
     /* Настройки (модалка) — оставил как у тебя, только чуть более “стекло” */
     .overlay{
