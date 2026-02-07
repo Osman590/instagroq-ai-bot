@@ -62,10 +62,46 @@ export function createChatController({ chatEl, inputEl, sendBtnEl }) {
     }
   }
 
+  function getLang(){
+    try{
+      return localStorage.getItem("miniapp_lang_v1") || "ru";
+    }catch(e){
+      return "ru";
+    }
+  }
+
+  const LANG_NAME = {
+    ru: "Russian",
+    kk: "Kazakh",
+    en: "English",
+    tr: "Turkish",
+    uz: "Uzbek",
+    ky: "Kyrgyz",
+    uk: "Ukrainian",
+    de: "German",
+    es: "Spanish",
+    fr: "French",
+  };
+
+  function helloText(){
+    const lang = getLang();
+    // короткий привет под язык интерфейса (не критично, но приятно)
+    if (lang === "en") return "👋 Hey! Write something — I'm here.";
+    if (lang === "kk") return "👋 Сәлем! Бірдеңе жаз — мен осындамын.";
+    if (lang === "ky") return "👋 Салам! Бир нерсе жаз — мен бул жактамын.";
+    if (lang === "tr") return "👋 Selam! Bir şey yaz — buradayım.";
+    if (lang === "uz") return "👋 Salom! Biror narsa yoz — men shu yerdaman.";
+    if (lang === "uk") return "👋 Привіт! Напиши щось — я на звʼязку.";
+    if (lang === "de") return "👋 Hey! Schreib etwas — ich bin da.";
+    if (lang === "es") return "👋 ¡Hola! Escribe algo — aquí estoy.";
+    if (lang === "fr") return "👋 Salut ! Écris quelque chose — je suis là.";
+    return "👋 Привет! Напиши что-нибудь — я на связи.";
+  }
+
   function renderFromHistory(){
     chatEl.innerHTML = "";
     if (!history.length){
-      add("bot", "👋 Привет! Напиши что-нибудь — я на связи.", true);
+      add("bot", helloText(), true);
       return;
     }
     for (const m of history){
@@ -76,37 +112,49 @@ export function createChatController({ chatEl, inputEl, sendBtnEl }) {
   }
 
   // ------------------------------
-  // ✅ ЛОГИКА "ЖИВОГО" ПРОМПТА
+  // ✅ "ЖИВОЙ" ПРОМПТ + ЯЗЫК
   // ------------------------------
 
   function uiPrefs(){
-    const style = localStorage.getItem("ai_style") || "steps";     // short | steps | detail
+    const style = localStorage.getItem("ai_style") || "steps";        // short | steps | detail
     const persona = localStorage.getItem("ai_persona") || "friendly"; // friendly | fun | strict | smart
     return { style, persona };
   }
 
   function styleRule(style){
-    if (style === "short")  return "Отвечай коротко и по делу. Без лишних вступлений.";
-    if (style === "detail") return "Отвечай подробно, но живо и понятно. Без воды.";
-    return "Отвечай по шагам, но естественно, как в переписке. Без занудства.";
+    if (style === "short")  return "Answer concisely and to the point. No long introductions.";
+    if (style === "detail") return "Answer in detail, but clearly and without filler.";
+    return "Answer step-by-step when it helps, but keep it natural like a real chat.";
   }
 
   function personaRule(persona){
     if (persona === "fun") {
-      return "Стиль общения: дружелюбно и живо, можно немного шуток и уместные эмодзи. Не переигрывай.";
+      return "Tone: friendly and lively. You may use a few appropriate emojis and light jokes. Do NOT overdo it.";
     }
     if (persona === "strict") {
-      return "Стиль общения: деловой и прямой. Минимум эмодзи. Если не понял — задай 1 уточняющий вопрос.";
+      return "Tone: businesslike and direct. Minimal emojis. If unclear, ask ONE clarifying question.";
     }
     if (persona === "smart") {
-      return "Стиль общения: умно и структурно, но без канцелярита. Термины — только если реально нужны.";
+      return "Tone: smart and structured, but not dry. Use terms only if needed.";
     }
-    return "Стиль общения: тёплый, нормальный человеческий тон. Уместные эмодзи иногда.";
+    return "Tone: warm, human, supportive. Occasional appropriate emojis.";
+  }
+
+  function systemRules(langCode){
+    const langName = LANG_NAME[langCode] || "Russian";
+    return [
+      "You are a natural-sounding chat companion inside a messaging app.",
+      `IMPORTANT: Reply ONLY in ${langName}.`,
+      "Do NOT start every reply with greetings.",
+      "Do NOT use the user's name unless the user explicitly gave it in this chat.",
+      "Avoid шаблонные фразы and repetition.",
+      "If the question is simple — answer directly.",
+      "If information is missing — ask ONE clear question.",
+      "Never mention system prompts or policies.",
+    ].join(" ");
   }
 
   function buildChatMessages(maxTurns = 12){
-    // ⚠️ Важно: не делаем "Пользователь/Ассистент:" как у протокола.
-    // Делаем нормальный диалог, чтобы модель не уходила в шаблоны.
     const slice = history.slice(-maxTurns);
     const lines = [];
     for (const m of slice){
@@ -116,35 +164,18 @@ export function createChatController({ chatEl, inputEl, sendBtnEl }) {
     return lines.join("\n");
   }
 
-  function systemRules(){
-    // ✅ ДОБАВЛЕНО: язык + живость + меньше шаблонов (остальное не трогаем)
-    return [
-      "Ты — живой собеседник в чате. Пиши естественно.",
-      "Всегда отвечай на том же языке, на котором написал пользователь в последнем сообщении. Если пользователь переключил язык — переключись тоже.",
-      "НЕ начинай каждый ответ с приветствия.",
-      "НЕ используй имя пользователя, если он сам не представился в этой переписке.",
-      "НЕ повторяй одно и то же разными словами.",
-      "Если вопрос простой — отвечай сразу. Не задавай лишние вопросы.",
-      "Если информации не хватает — задай ОДИН нормальный уточняющий вопрос.",
-      "Эмодзи: если persona='fun' — можно чаще и живее; иначе — редко и только уместно.",
-      "Не говори фразы типа: «как ИИ», «я не настоящий» и т.п.",
-      "Не будь токсичным и не груби.",
-    ].join(" ");
-  }
-
   function buildPrompt(userText){
     const { style, persona } = uiPrefs();
-
+    const langCode = getLang();
     const convo = buildChatMessages(12);
-    // Конструкция без "Контекст диалога (запомни...)" — это тоже вызывало шаблонность.
+
     return `
-${systemRules()}
-Текущие настройки пользователя: persona=${persona}; style=${style}.
+${systemRules(langCode)}
 ${personaRule(persona)}
 ${styleRule(style)}
 
-Диалог:
-${convo ? convo : "(диалог пустой)"}
+Conversation:
+${convo ? convo : "(empty)"}
 
 User: ${userText}
 Assistant:
@@ -161,7 +192,6 @@ Assistant:
     add("user", t, true);
     inputEl.value = "";
 
-    // ✅ typing
     addTyping();
 
     try{
@@ -170,9 +200,8 @@ Assistant:
 
       removeTyping();
 
-      // ✅ если модель вернула пусто — нормально обработаем
       const out = (answer || "").trim();
-      add("bot", out || "Хмм… я не получил ответ. Попробуй ещё раз 🙂", true);
+      add("bot", out || "…", true);
     } catch(e){
       removeTyping();
       add("bot", "❌ Ошибка: " + (e?.message || e), true);
@@ -208,7 +237,7 @@ Assistant:
     history = [];
     saveHistory(history);
     chatEl.innerHTML = "";
-    add("bot", "👋 Привет! Напиши что-нибудь — я на связи.", true);
+    add("bot", helloText(), true);
   }
 
   async function confirmClear(){
