@@ -2,16 +2,145 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>AI Chat</title>
 
-  <!-- Telegram WebApp API -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="./css/base.css">
-  <link rel="stylesheet" href="./css/panels.css">
-  <link rel="stylesheet" href="./css/chat.css">
+  <style>
+    :root{ --vh:100vh; }
+
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body{ height:100%; margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif; }
+
+    /* ===== iOS ФОН + ГЛУБИНА ===== */
+    body{
+      background:
+        radial-gradient(1200px 800px at 30% 15%, rgba(40,120,255,.28) 0%, transparent 60%),
+        radial-gradient(1000px 700px at 70% 85%, rgba(40,90,255,.22) 0%, transparent 55%),
+        linear-gradient(180deg,#0a2344 0%, #071a33 45%, #061628 100%);
+      color:#fff;
+      display:flex;
+      flex-direction:column;
+      height:var(--vh);
+      overflow:hidden;
+      touch-action:manipulation;
+      -webkit-text-size-adjust:100%;
+    }
+
+    /* ===== iOS PATTERN ===== */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.18;
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.9' stroke-width='1'%3E%3Cpath d='M60 44c10 0 18 8 18 18s-8 18-18 18-18-8-18-18 8-18 18-18z'/%3E%3Cpath d='M170 52c12 0 22 10 22 22s-10 22-22 22-22-10-22-22 10-22 22-22z'/%3E%3Cpath d='M44 148h34m-17-17v34'/%3E%3Cpath d='M150 150c0-10 8-18 18-18s18 8 18 18-8 18-18 18-18-8-18-18z'/%3E%3Cpath d='M120 78l16 10-10 16-16-10z'/%3E%3Cpath d='M98 182c8 0 14 6 14 14s-6 14-14 14-14-6-14-14z'/%3E%3Cpath d='M190 182l10 10m0-10l-10 10'/%3E%3Cpath d='M34 94c10-8 24-8 34 0'/%3E%3Cpath d='M132 30c10 8 24 8 34 0'/%3E%3Cpath d='M110 120h20m-10-10v20'/%3E%3C/g%3E%3C/svg%3E");
+      background-size:240px 240px;
+      background-repeat:repeat;
+    }
+
+    /* ===== ВЕРХНЯЯ ПАНЕЛЬ (СТЕКЛО) ===== */
+    .top{
+      position:fixed;
+      top:0; left:0; right:0;
+      z-index:20;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:6px 14px;
+      padding-top:calc(6px + env(safe-area-inset-top));
+      background:rgba(255,255,255,.02);
+      backdrop-filter:blur(32px) saturate(210%);
+      -webkit-backdrop-filter:blur(32px) saturate(210%);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+
+    .top a{ color:#cfe4ff; text-decoration:none; font-size:16px; }
+    .title{ font-weight:700; font-size:17px; }
+    .spacer{ flex:1; }
+
+    .gear{
+      width:36px;height:36px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.25);
+      background:rgba(255,255,255,.15);
+      color:#fff;
+      font-size:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      backdrop-filter:blur(12px);
+    }
+
+    /* ===== ЧАТ ===== */
+    .chat{
+      flex:1;
+      padding:16px;
+      padding-top:calc(60px + env(safe-area-inset-top));
+      overflow-y:auto;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .msg{
+      max-width:78%;
+      padding:12px 14px;
+      border-radius:18px;
+      font-size:15px;
+      line-height:1.35;
+      box-shadow:0 10px 26px rgba(0,0,0,.18);
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .bot{
+      align-self:flex-start;
+      background:rgba(255,255,255,.16);
+      border:1px solid rgba(255,255,255,.18);
+      backdrop-filter:blur(10px);
+    }
+
+    .user{
+      align-self:flex-end;
+      background:linear-gradient(180deg,#3aa0ff 0%, #0a84ff 100%);
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    /* ===== НИЖНЯЯ ПАНЕЛЬ ===== */
+    .input{
+      display:flex;
+      gap:10px;
+      padding:12px;
+      padding-bottom:calc(12px + env(safe-area-inset-bottom));
+      border-top:1px solid rgba(255,255,255,.18);
+      background:rgba(20,35,60,.35);
+      backdrop-filter:blur(24px) saturate(180%);
+    }
+
+    .input input{
+      flex:1;
+      padding:14px 16px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.22);
+      font-size:15px;
+      background:rgba(255,255,255,.92);
+      color:#0b1220;
+    }
+
+    .input button{
+      padding:0 18px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.14);
+      font-size:16px;
+      font-weight:800;
+      background:linear-gradient(180deg,#3aa0ff 0%, #0a84ff 100%);
+      color:#fff;
+    }
+  </style>
 </head>
 
 <body>
@@ -20,53 +149,15 @@
     <a href="./index.html">←</a>
     <div class="title">AI Chat</div>
     <div class="spacer"></div>
-    <button class="gear" id="gearBtn" aria-label="Настройки">⚙️</button>
+    <button class="gear">⚙️</button>
   </div>
 
   <div class="chat" id="chat"></div>
 
   <div class="input">
-    <input id="text" placeholder="Напиши сообщение…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
-    <button id="sendBtn">▶</button>
+    <input placeholder="Напиши сообщение…" />
+    <button>▶</button>
   </div>
 
-  <!-- Настройки -->
-  <div class="overlay" id="overlay">
-    <div class="sheet">
-      <h3>⚙️ Настройки</h3>
-
-      <div class="row">
-        <div>Стиль ответа</div>
-        <select id="styleSel">
-          <option value="short">Коротко</option>
-          <option value="steps">По шагам</option>
-          <option value="detail">Подробно</option>
-        </select>
-      </div>
-
-      <div class="row">
-        <div>Характер</div>
-        <select id="personaSel">
-          <option value="friendly">Общительный</option>
-          <option value="fun">Весёлый</option>
-          <option value="strict">Строгий</option>
-          <option value="smart">Умный</option>
-        </select>
-      </div>
-
-      <div class="row">
-        <div>Чат</div>
-        <button class="pill" id="clearBtn">🧹 Очистить</button>
-      </div>
-
-      <div class="row">
-        <div></div>
-        <button class="pill" id="closeSettings">Закрыть</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- JS (модули) -->
-  <script type="module" src="./js/chat-page.js"></script>
 </body>
 </html>
