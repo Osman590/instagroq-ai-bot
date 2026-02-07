@@ -8,192 +8,8 @@
   <!-- Telegram WebApp API -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <style>
-    :root{
-      --vh: 100vh;
-
-      /* ✅ голубой фон */
-      --bgTop:#0b5fa8;
-      --bgMid:#083d74;
-      --bgBot:#051f3d;
-
-      --text: rgba(255,255,255,.94);
-      --muted: rgba(255,255,255,.62);
-
-      --glass: rgba(255,255,255,.10);
-      --glass2: rgba(255,255,255,.06);
-      --stroke: rgba(255,255,255,.18);
-
-      --glow: rgba(90,190,255,.30);
-      --glow2: rgba(120,220,255,.22);
-    }
-
-    *{box-sizing:border-box}
-    html,body{height:100%; margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;}
-
-    body{
-      height: var(--vh);
-      color:var(--text);
-      overflow:hidden;
-
-      /* ✅ ЯРКИЙ голубой + “световые пятна” */
-      background:
-        radial-gradient(900px 650px at 20% 18%, rgba(180,245,255,.35) 0%, transparent 60%),
-        radial-gradient(1100px 800px at 80% 70%, rgba(90,190,255,.30) 0%, transparent 58%),
-        radial-gradient(520px 420px at 55% 35%, rgba(255,255,255,.12) 0%, transparent 65%),
-        linear-gradient(180deg, var(--bgTop) 0%, var(--bgMid) 50%, var(--bgBot) 100%);
-    }
-
-    /* ✅ стеклянные квадраты */
-    .cube{
-      position:absolute;
-      width:120px; height:120px;
-      border-radius:18px;
-
-      background: rgba(255,255,255,.07);
-      border: 1px solid rgba(255,255,255,.22);
-
-      backdrop-filter: blur(14px) saturate(160%);
-      -webkit-backdrop-filter: blur(14px) saturate(160%);
-
-      /* ✅ яркие “углы/свечение” */
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,.07) inset,
-        0 0 34px rgba(120,220,255,.25),
-        0 22px 60px rgba(0,0,0,.26);
-
-      pointer-events:none;
-      opacity:.95;
-    }
-
-    .cube.small{ width:60px; height:60px; border-radius:16px; opacity:.82; }
-    .cube.tiny{ width:34px; height:34px; border-radius:12px; opacity:.74; }
-
-    /* ✅ анимации в разные стороны */
-    .f1{ animation: drift1 10s ease-in-out infinite; }
-    .f2{ animation: drift2 12s ease-in-out infinite; }
-    .f3{ animation: drift3 11s ease-in-out infinite; }
-    .f4{ animation: drift4 13s ease-in-out infinite; }
-    .f5{ animation: drift5 9s  ease-in-out infinite; }
-    .f6{ animation: drift6 14s ease-in-out infinite; }
-
-    @keyframes drift1{ 0%,100%{transform: translate(0,0)} 50%{transform: translate(18px,-22px)} }
-    @keyframes drift2{ 0%,100%{transform: translate(0,0)} 50%{transform: translate(-22px,-14px)} }
-    @keyframes drift3{ 0%,100%{transform: translate(0,0)} 50%{transform: translate(16px,18px)} }
-    @keyframes drift4{ 0%,100%{transform: translate(0,0)} 50%{transform: translate(-18px,22px)} }
-    @keyframes drift5{ 0%,100%{transform: translate(0,0)} 50%{transform: translate(10px,-18px)} }
-    @keyframes drift6{ 0%,100%{transform: translate(0,0)} 50%{transform: translate(-12px,16px)} }
-
-    /* ✅ мягкие “шарики” */
-    .orb{
-      position:absolute;
-      width:260px; height:260px;
-      border-radius:999px;
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.22), rgba(90,190,255,.16) 45%, transparent 72%);
-      filter: blur(2px);
-      opacity:.95;
-      pointer-events:none;
-    }
-    .orb.o1{ left:-90px; top:140px; animation: drift2 14s ease-in-out infinite; }
-    .orb.o2{ left:70%; top:6%; width:180px; height:180px; opacity:.78; animation: drift3 12s ease-in-out infinite; }
-    .orb.o3{ left:52%; top:70%; width:120px; height:120px; opacity:.68; animation: drift4 11s ease-in-out infinite; }
-    .orb.o4{ left:10%; top:72%; width:160px; height:160px; opacity:.72; animation: drift1 13s ease-in-out infinite; }
-
-    .wrap{
-      position:relative;
-      height:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-      z-index:2;
-    }
-
-    /* ✅ карточка стекло */
-    .card{
-      width:min(520px, 100%);
-      padding:22px;
-      border-radius:26px;
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.18);
-      backdrop-filter: blur(18px) saturate(160%);
-      -webkit-backdrop-filter: blur(18px) saturate(160%);
-      box-shadow: 0 22px 70px rgba(0,0,0,.35);
-    }
-
-    /* ✅ КНОПКА — прозрачное стекло */
-    .btn{
-      display:block;
-      width:100%;
-      text-align:center;
-      padding:18px 16px;
-      border-radius:22px;
-      font-size:22px;
-      font-weight:900;
-      color:var(--text);
-      text-decoration:none;
-
-      background: rgba(255,255,255,.10);
-      border: 1px solid rgba(255,255,255,.22);
-
-      backdrop-filter: blur(22px) saturate(170%);
-      -webkit-backdrop-filter: blur(22px) saturate(170%);
-
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,.08) inset,
-        0 18px 55px rgba(0,0,0,.32),
-        0 0 40px rgba(120,220,255,.22);
-    }
-    .btn:active{ transform: scale(.995); }
-
-    .sub{
-      margin-top:14px;
-      text-align:center;
-      color:var(--muted);
-      font-size:14px;
-    }
-    .ver{
-      margin-top:10px;
-      text-align:center;
-      font-size:12px;
-      opacity:.55;
-    }
-
-    /* ✅ блок языка снизу */
-    .langBlock{
-      margin-top:16px;
-      border-top: 1px solid rgba(255,255,255,.14);
-      padding-top:14px;
-    }
-    .langTitle{
-      font-size:13px;
-      color: rgba(255,255,255,.72);
-      margin-bottom:10px;
-      text-align:center;
-    }
-
-    /* ✅ “пилюля” выбора + выпадающий список со скроллом */
-    .langSelect{
-      width:100%;
-      border-radius:18px;
-      padding:14px 14px;
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.18);
-      color: rgba(255,255,255,.92);
-      outline:none;
-
-      backdrop-filter: blur(16px) saturate(150%);
-      -webkit-backdrop-filter: blur(16px) saturate(150%);
-      box-shadow: 0 10px 28px rgba(0,0,0,.22);
-
-      font-size:16px;
-      font-weight:700;
-
-      /* ✅ для iOS — чтобы список был прокручиваемый */
-      max-height: 220px;
-    }
-    option{ color:#0b1220; }
-  </style>
+  <!-- CSS -->
+  <link rel="stylesheet" href="./css/index.css?v=3">
 </head>
 
 <body>
@@ -233,86 +49,31 @@
       <!-- ✅ выбор языка -->
       <div class="langBlock">
         <div class="langTitle" id="langTitle">Язык интерфейса</div>
-        <select class="langSelect" id="langSel" size="1">
-          <option value="ru">Русский (RU)</option>
-          <option value="kk">Қазақша (KZ)</option>
-          <option value="en">English (EN)</option>
-          <option value="tr">Türkçe (TR)</option>
-          <option value="uz">O‘zbek (UZ)</option>
-          <option value="ky">Кыргызча (KG)</option>
-          <option value="uk">Українська (UA)</option>
-          <option value="de">Deutsch (DE)</option>
-          <option value="es">Español (ES)</option>
-          <option value="fr">Français (FR)</option>
-        </select>
+
+        <!-- выглядит как select, но открывает нижний список -->
+        <button class="langPill" id="langBtn" type="button" aria-haspopup="dialog" aria-expanded="false">
+          Русский (RU)
+          <span class="chev">▾</span>
+        </button>
       </div>
     </div>
   </div>
 
-  <script>
-    const tg = window.Telegram?.WebApp;
+  <!-- ✅ НИЖНИЙ СКРОЛЛ-СПИСОК (40% высоты) -->
+  <div class="langOverlay" id="langOverlay" aria-hidden="true">
+    <div class="langSheet" role="dialog" aria-modal="true" aria-label="Language selector">
+      <div class="langSheetHeader">
+        <div class="langSheetTitle" id="langSheetTitle">Язык</div>
+        <button class="langClose" id="langClose" type="button">✕</button>
+      </div>
 
-    function applyVH(){
-      if (tg && typeof tg.viewportHeight === "number") {
-        document.documentElement.style.setProperty("--vh", tg.viewportHeight + "px");
-      } else {
-        document.documentElement.style.setProperty("--vh", window.innerHeight + "px");
-      }
-    }
+      <div class="langList" id="langList">
+        <!-- пункты создаются в JS -->
+      </div>
+    </div>
+  </div>
 
-    if (tg) {
-      tg.ready();
-      tg.expand();
-      applyVH();
-      tg.onEvent("viewportChanged", applyVH);
-    } else {
-      applyVH();
-      window.addEventListener("resize", applyVH);
-    }
-
-    // ===== language =====
-    const STORAGE_LANG = "miniapp_lang_v1";
-    const langSel = document.getElementById("langSel");
-    const chatBtn = document.getElementById("chatBtn");
-    const subText = document.getElementById("subText");
-    const verText = document.getElementById("verText");
-    const langTitle = document.getElementById("langTitle");
-
-    const I18N = {
-      ru: { btn:"Чат с ИИ", sub:"Быстрые ответы • Память • Заметки", ver:"miniapp v2", lang:"Язык интерфейса" },
-      kk: { btn:"AI чат", sub:"Жылдам жауаптар • Есте сақтау • Жазбалар", ver:"miniapp v2", lang:"Тіл" },
-      en: { btn:"AI Chat", sub:"Fast replies • Memory • Notes", ver:"miniapp v2", lang:"Language" },
-      tr: { btn:"Yapay Zekâ Sohbet", sub:"Hızlı yanıtlar • Hafıza • Notlar", ver:"miniapp v2", lang:"Dil" },
-      uz: { btn:"AI Chat", sub:"Tez javoblar • Xotira • Eslatmalar", ver:"miniapp v2", lang:"Til" },
-      ky: { btn:"AI чат", sub:"Тез жооптор • Эс тутум • Жазмалар", ver:"miniapp v2", lang:"Тил" },
-      uk: { btn:"AI чат", sub:"Швидкі відповіді • Пам’ять • Нотатки", ver:"miniapp v2", lang:"Мова" },
-      de: { btn:"KI-Chat", sub:"Schnelle Antworten • Speicher • Notizen", ver:"miniapp v2", lang:"Sprache" },
-      es: { btn:"Chat IA", sub:"Respuestas rápidas • Memoria • Notas", ver:"miniapp v2", lang:"Idioma" },
-      fr: { btn:"Chat IA", sub:"Réponses rapides • Mémoire • Notes", ver:"miniapp v2", lang:"Langue" },
-    };
-
-    function setLang(lang){
-      const t = I18N[lang] || I18N.ru;
-      chatBtn.textContent = t.btn;
-      subText.textContent = t.sub;
-      verText.textContent = t.ver;
-      langTitle.textContent = t.lang;
-
-      // сохраняем
-      try{ localStorage.setItem(STORAGE_LANG, lang); }catch(e){}
-
-      // ✅ передаём язык в chat.html
-      const baseHref = "./chat.html?v=2";
-      chatBtn.href = baseHref + "&lang=" + encodeURIComponent(lang);
-    }
-
-    // init
-    let saved = "ru";
-    try{ saved = localStorage.getItem(STORAGE_LANG) || "ru"; }catch(e){}
-    langSel.value = saved;
-    setLang(saved);
-
-    langSel.addEventListener("change", () => setLang(langSel.value));
-  </script>
+  <!-- JS -->
+  <script type="module" src="./js/index.js?v=3"></script>
 </body>
 </html>
