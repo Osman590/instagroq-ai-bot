@@ -1,1 +1,43 @@
- 
+.chat{
+  flex:1 1 auto;
+  padding:16px;
+
+  /* чтобы чат не прятался под fixed-top */
+  padding-top: calc(60px + env(safe-area-inset-top));
+
+  overflow-y:auto;
+  -webkit-overflow-scrolling: touch;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  min-height:0;
+  touch-action: manipulation;
+}
+
+/* пузыри iPhone vibe */
+.msg{
+  max-width:78%;
+  padding:12px 14px;
+  border-radius:18px;
+  line-height:1.35;
+  font-size:15px;
+  white-space:pre-wrap;
+  word-break:break-word;
+  box-shadow: 0 10px 26px rgba(0,0,0,.18);
+}
+
+/* bot: стеклянный */
+.bot{
+  align-self:flex-start;
+  background: rgba(255,255,255,.16);
+  border: 1px solid rgba(255,255,255,.18);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* user: iMessage blue */
+.user{
+  align-self:flex-end;
+  background: linear-gradient(180deg,#3aa0ff 0%, #0a84ff 100%);
+  border: 1px solid rgba(255,255,255,.10);
+}
