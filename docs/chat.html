@@ -33,13 +33,16 @@
   gap:10px;
   padding:14px 16px;
 
-  border-bottom:1px solid rgba(255,255,255,.14);
+  /* ❗ УБИРАЕМ синий */
+  background: rgba(20,30,45,.25);
 
-  background: rgba(12,22,38,.34);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  /* iOS glass */
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
 
-  box-shadow: 0 10px 30px rgba(0,0,0,.22);
+  border-bottom: 1px solid rgba(255,255,255,.18);
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+
   flex:0 0 auto;
 }
     .top a{ color:rgba(210,230,255,.95); text-decoration:none; font-size:16px; }
