@@ -1,8 +1,5 @@
 export const tg = window.Telegram?.WebApp || null;
 
-/**
- * Устанавливает корректную высоту экрана
- */
 export function applyViewportHeight() {
   if (tg && typeof tg.viewportHeight === "number") {
     document.documentElement.style.setProperty("--vh", tg.viewportHeight + "px");
@@ -11,36 +8,17 @@ export function applyViewportHeight() {
   }
 }
 
-/**
- * Инициализация Telegram Mini App
- * mode: "menu" | "chat"
- */
-export function initTelegramViewport({ chatEl = null, mode = "menu" } = {}) {
+export function initTelegramViewport(chatEl = null) {
   if (tg) {
     tg.ready();
-
-    // ✅ expand ТОЛЬКО для чата
-    if (mode === "chat") {
-      tg.expand();
-    }
-
-    // ❌ убираем swipe-to-close (iOS)
-    if (tg.disableClosingConfirmation) {
-      tg.disableClosingConfirmation();
-    }
+    tg.expand();
   }
 
   applyViewportHeight();
 
   const onChange = () => {
     applyViewportHeight();
-
-    // автоскролл только для чата
-    if (chatEl) {
-      requestAnimationFrame(() => {
-        chatEl.scrollTop = chatEl.scrollHeight;
-      });
-    }
+    if (chatEl) requestAnimationFrame(() => (chatEl.scrollTop = chatEl.scrollHeight));
   };
 
   if (tg && tg.onEvent) {
