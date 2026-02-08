@@ -61,25 +61,49 @@ def build_start_log(update: Update) -> str:
     )
 
 
+def normalize_access(a: dict | None) -> dict:
+    """
+    Приводим к единому виду:
+      free: bool
+      paid: bool
+      blocked: bool
+    Поддерживаем и старые ключи is_free/is_blocked
+    """
+    a = a if isinstance(a, dict) else {}
+    free = bool(a.get("free") or a.get("is_free"))
+    paid = bool(a.get("paid") or a.get("is_paid"))
+    blocked = bool(a.get("blocked") or a.get("is_blocked"))
+    return {"free": free, "paid": paid, "blocked": blocked}
+
+
 def main_menu_for_user(user_id: int) -> InlineKeyboardMarkup:
-    a = get_access(user_id) if user_id else {"is_free": False, "is_blocked": False}
+    a_raw = get_access(user_id) if user_id else {}
+    a = normalize_access(a_raw)
 
     keyboard = []
 
-    # если заблокирован — вообще ничего не даём открыть
-    if a.get("is_blocked"):
-        keyboard.append([InlineKeyboardButton("⛔ Доступ заблокирован", callback_data="blocked")])
+    # 1) URL не настроен
+    if not is_valid_https_url(MINIAPP_URL):
+        keyboard.append([InlineKeyboardButton("🚀 Mini App (URL не настроен)", callback_data="miniapp_not_set")])
+        keyboard.append([InlineKeyboardButton("⭐ Купить пакет", callback_data="buy_pack")])
+        keyboard.append([
+            InlineKeyboardButton("⚙️ Настройки", callback_data="settings"),
+            InlineKeyboardButton("❓ Помощь", callback_data="help"),
+        ])
         return InlineKeyboardMarkup(keyboard)
 
-    # по умолчанию платно
-    if a.get("is_free") and is_valid_https_url(MINIAPP_URL):
-        keyboard.append([
-            InlineKeyboardButton("🚀 Открыть Mini App", web_app=WebAppInfo(url=MINIAPP_URL))
-        ])
+    # 2) Заблокирован
+    if a["blocked"]:
+        keyboard.append([InlineKeyboardButton("⛔ Доступ заблокирован", callback_data="blocked")])
+        keyboard.append([InlineKeyboardButton("❓ Помощь", callback_data="help")])
+        return InlineKeyboardMarkup(keyboard)
+
+    # 3) Доступ есть (FREE или PAID) → открываем miniapp
+    can_open = a["free"] or a["paid"]
+    if can_open:
+        keyboard.append([InlineKeyboardButton("🚀 Открыть Mini App", web_app=WebAppInfo(url=MINIAPP_URL))])
     else:
-        keyboard.append([
-            InlineKeyboardButton("🚀 Открыть Mini App", callback_data="need_pay")
-        ])
+        keyboard.append([InlineKeyboardButton("🚀 Открыть Mini App", callback_data="need_pay")])
 
     keyboard.append([InlineKeyboardButton("⭐ Купить пакет", callback_data="buy_pack")])
     keyboard.append([
@@ -106,6 +130,13 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     data = query.data or ""
+
+    if data == "miniapp_not_set":
+        await query.message.reply_text(
+            "⚠️ MINIAPP_URL не настроен.\n"
+            "Добавь в Railway → Variables: MINIAPP_URL = https://..."
+        )
+        return
 
     if data == "blocked":
         await query.message.reply_text("⛔ Тебя заблокировали. Напиши администратору.")
