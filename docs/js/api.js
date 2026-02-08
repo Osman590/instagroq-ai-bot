@@ -4,21 +4,18 @@ const API_BASE = "https://instagroq-ai-bot-production.up.railway.app";
 const API_CHAT = API_BASE + "/api/chat";
 
 function getLang(){
-  try{ return localStorage.getItem("miniapp_lang_v1") || "ru"; }
-  catch(e){ return "ru"; }
+  return localStorage.getItem("miniapp_lang_v1") || "ru";
 }
 
 function getStyle(){
-  try{ return localStorage.getItem("ai_style") || "steps"; }
-  catch(e){ return "steps"; }
+  return localStorage.getItem("ai_style") || "steps";
 }
 
 function getPersona(){
-  try{ return localStorage.getItem("ai_persona") || "friendly"; }
-  catch(e){ return "friendly"; }
+  return localStorage.getItem("ai_persona") || "friendly";
 }
 
-// ✅ получаем данные Telegram пользователя
+// ✅ Telegram user
 function getTelegramUser(){
   const tg = window.Telegram?.WebApp;
   if (!tg || !tg.initDataUnsafe?.user) return {};
@@ -26,8 +23,8 @@ function getTelegramUser(){
   const u = tg.initDataUnsafe.user;
   return {
     tg_user_id: u.id,
-    tg_username: u.username || null,
-    tg_first_name: u.first_name || null,
+    tg_username: u.username || "—",
+    tg_first_name: u.first_name || "—",
   };
 }
 
@@ -40,7 +37,7 @@ export async function askAI(promptText) {
     style: getStyle(),
     persona: getPersona(),
 
-    // ✅ ИМЕННО ТАК ЖДЁТ api.py
+    // 🔥 ВАЖНО — имена как в api.py
     tg_user_id: user.tg_user_id,
     tg_username: user.tg_username,
     tg_first_name: user.tg_first_name,
@@ -53,8 +50,7 @@ export async function askAI(promptText) {
   });
 
   if (!r.ok) {
-    const t = await r.text();
-    throw new Error("API " + r.status + ": " + t);
+    throw new Error("API error " + r.status);
   }
 
   const data = await r.json();
