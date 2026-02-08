@@ -96,3 +96,18 @@ body > *{
   position: relative;
   z-index: 1;
 }
+
+/* ✅ iOS keyboard flash fix: чтобы не просвечивал белый фон html */
+html{
+  background-color: var(--bgBot);
+  background-image:
+    radial-gradient(900px 900px at 50% 42%, rgba(110,160,255,.22) 0%, rgba(30,80,160,.10) 38%, rgba(0,0,0,0) 70%),
+    radial-gradient(700px 700px at 18% 18%, rgba(90,140,255,.16) 0%, rgba(0,0,0,0) 60%),
+    linear-gradient(180deg, var(--bgTop) 0%, var(--bgMid) 46%, var(--bgBot) 100%);
+  background-repeat:no-repeat;
+}
+
+/* ✅ fallback на цвет, если iOS на кадр “теряет” background */
+body{
+  background-color: var(--bgBot);
+}
