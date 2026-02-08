@@ -1,4 +1,4 @@
-/* docs/css/base.css — FIX THEME SUPPORT (ничего лишнего не менялось) */
+/* docs/css/base.css — FIX THEME SUPPORT (фон БЕЗ пятен) */
 
 :root{
   --vh: 100vh;
@@ -55,17 +55,17 @@ html,body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;
 }
 
-/* ✅ чтобы не было белой “вспышки” при пересчёте viewport */
+/* ✅ защита от белой вспышки */
 html{
   background: var(--bgBot);
 }
 
-/* ✅ Фон переносим в fixed-слой, чтобы пятна НЕ двигались при клавиатуре */
+/* ✅ ОДНОТОННЫЙ ФОН — НИЧЕГО НЕ ДВИГАЕТСЯ */
 body{
   position: relative;
 
-  background: transparent;
-  background-color: var(--bgBot); /* ⬅️ защита от «полосы» */
+  background: var(--bgBot);
+  background-color: var(--bgBot);
 
   color: var(--text);
   display: flex;
@@ -76,7 +76,7 @@ body{
   -webkit-text-size-adjust: 100%;
 }
 
-/* ✅ Слой с “пятнами” и градиентом — фиксированный */
+/* ❌ УБРАНЫ ПЯТНА И ГРАДИЕНТЫ */
 body::after{
   content:"";
   position: fixed;
@@ -84,16 +84,10 @@ body::after{
   pointer-events: none;
   z-index: 0;
 
-  background:
-    radial-gradient(900px 900px at 50% 42%, rgba(110,160,255,.22) 0%, rgba(30,80,160,.10) 38%, rgba(0,0,0,0) 70%),
-    radial-gradient(700px 700px at 18% 18%, rgba(90,140,255,.16) 0%, rgba(0,0,0,0) 60%),
-    linear-gradient(180deg, var(--bgTop) 0%, var(--bgMid) 46%, var(--bgBot) 100%);
-
-  background-repeat: no-repeat;
-  background-color: var(--bgBot);
+  background: var(--bgBot);
 }
 
-/* ✅ Паттерн (иконки на фоне), НЕ влияет на чат */
+/* ✅ Паттерн (иконки) — можно оставить, он НЕ двигается */
 body::before{
   content:"";
   position: fixed;
@@ -109,7 +103,7 @@ body::before{
   mix-blend-mode: screen;
 }
 
-/* ✅ Чтобы контент был поверх паттерна */
+/* ✅ Контент поверх всего */
 body > *{
   position: relative;
   z-index: 2;
