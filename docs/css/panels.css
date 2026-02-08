@@ -1,4 +1,3 @@
-/* стеклянная верхняя панель (полностью прозрачная, видно чат под ней) */
 .top{
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -8,11 +7,9 @@
   align-items:center;
   gap:10px;
 
-  /* чуть уже + safe-area сверху */
   padding: 6px 14px;
   padding-top: calc(6px + env(safe-area-inset-top));
 
-  /* максимально “glass” */
   background: rgba(255,255,255,.01);
   backdrop-filter: blur(32px) saturate(210%);
   -webkit-backdrop-filter: blur(32px) saturate(210%);
@@ -48,25 +45,19 @@
   box-shadow: 0 6px 18px rgba(0,0,0,.25);
 }
 
-/* ✅ нижняя панель ввода — СТЕКЛО (более прозрачная, видно чат под ней) */
 .input{
   flex:0 0 auto;
   display:flex;
   gap:10px;
 
-  /* немного “тоньше”, как iOS */
   padding:10px 12px;
   padding-bottom: calc(10px + env(safe-area-inset-bottom));
 
-  /* максимально glass */
   background: rgba(255,255,255,.03);
   backdrop-filter: blur(32px) saturate(210%);
   -webkit-backdrop-filter: blur(32px) saturate(210%);
 
-  /* тонкий разделитель как у iOS */
   border-top: 1px solid rgba(255,255,255,.08);
-
-  /* без темной тени (чтобы не выглядело как “плашка”) */
   box-shadow: none;
 }
 
@@ -80,7 +71,7 @@
   color:#0b1220;
   background: rgba(255,255,255,.92);
   box-shadow: 0 10px 24px rgba(0,0,0,.16);
-  caret-color:#0a84ff;
+  caret-color: var(--accent2);
 }
 
 .input button{
@@ -89,9 +80,9 @@
   border:1px solid rgba(255,255,255,.14);
   font-size:16px;
   font-weight:800;
-  background: linear-gradient(180deg,#3aa0ff 0%, #0a84ff 100%);
+  background: linear-gradient(180deg, var(--accent1) 0%, var(--accent2) 100%);
   color:#fff;
-  box-shadow: 0 12px 26px rgba(10,132,255,.22);
+  box-shadow: 0 12px 26px rgba(0,0,0,.18);
 }
 
 /* Настройки (модалка) */
