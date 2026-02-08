@@ -81,6 +81,11 @@ body::after{
   pointer-events: none;
   z-index: 0;
 
+  /* ✅ РОВНЫЙ ФОН ОДНИМ ЦВЕТОМ (как верхняя часть) */
+  background: var(--bgTop);
+  background-repeat: no-repeat;
+}
+
   background:
     linear-gradient(
       180deg,
