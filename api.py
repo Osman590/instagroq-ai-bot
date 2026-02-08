@@ -119,8 +119,3 @@ def api_chat():
         print("TELEGRAM LOG ERROR:", info)
 
     return jsonify({"reply": reply})
-   
-@api.get("/test-log")
-def test_log():
-    send_log_to_group("✅ TEST: Railway API может писать в Telegram")
-    return jsonify({"ok": True})
