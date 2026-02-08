@@ -1,7 +1,7 @@
 :root{
   --vh: 100vh;
 
-  /* ✅ голубой фон */
+  /* ✅ голубой фон (по умолчанию) */
   --bgTop:#0b5fa8;
   --bgMid:#083d74;
   --bgBot:#051f3d;
@@ -15,6 +15,60 @@
 
   --glow: rgba(90,190,255,.30);
   --glow2: rgba(120,220,255,.22);
+
+  /* ✅ цвета для свечения/акцента (по умолчанию голубой) */
+  --accentGlow: rgba(120,220,255,.22);
+  --cubeGlow: rgba(120,220,255,.25);
+  --orbGlowA: rgba(90,190,255,.16);
+}
+
+/* ===================== */
+/* ✅ THEMES (menu only) */
+/* ===================== */
+/* ВАЖНО: меняется только цветовая схема, остальная структура не трогается */
+
+/* black */
+html[data-theme="black"]{
+  --bgTop:#0f1520;
+  --bgMid:#0a0f18;
+  --bgBot:#05070c;
+
+  --accentGlow: rgba(255,255,255,.14);
+  --cubeGlow: rgba(255,255,255,.14);
+  --orbGlowA: rgba(255,255,255,.10);
+}
+
+/* purple */
+html[data-theme="purple"]{
+  --bgTop:#4a2bb8;
+  --bgMid:#2c1d72;
+  --bgBot:#140b35;
+
+  --accentGlow: rgba(190,140,255,.22);
+  --cubeGlow: rgba(190,140,255,.25);
+  --orbGlowA: rgba(190,140,255,.16);
+}
+
+/* green */
+html[data-theme="green"]{
+  --bgTop:#0e8a63;
+  --bgMid:#0a5a43;
+  --bgBot:#053525;
+
+  --accentGlow: rgba(110,255,190,.20);
+  --cubeGlow: rgba(110,255,190,.22);
+  --orbGlowA: rgba(110,255,190,.14);
+}
+
+/* gray */
+html[data-theme="gray"]{
+  --bgTop:#3a4a5a;
+  --bgMid:#22303d;
+  --bgBot:#121a22;
+
+  --accentGlow: rgba(190,210,230,.18);
+  --cubeGlow: rgba(190,210,230,.20);
+  --orbGlowA: rgba(190,210,230,.12);
 }
 
 *{box-sizing:border-box}
@@ -25,7 +79,7 @@ body{
   color:var(--text);
   overflow:hidden;
 
-  /* ✅ ЯРКИЙ голубой + “световые пятна” */
+  /* ✅ ЯРКИЙ фон + “световые пятна” (через переменные, чтобы темы работали) */
   background:
     radial-gradient(900px 650px at 20% 18%, rgba(180,245,255,.35) 0%, transparent 60%),
     radial-gradient(1100px 800px at 80% 70%, rgba(90,190,255,.30) 0%, transparent 58%),
@@ -45,10 +99,9 @@ body{
   backdrop-filter: blur(14px) saturate(160%);
   -webkit-backdrop-filter: blur(14px) saturate(160%);
 
-  /* ✅ яркие “углы/свечение” */
   box-shadow:
     0 0 0 1px rgba(255,255,255,.07) inset,
-    0 0 34px rgba(120,220,255,.25),
+    0 0 34px var(--cubeGlow),
     0 22px 60px rgba(0,0,0,.26);
 
   pointer-events:none;
@@ -78,7 +131,7 @@ body{
   position:absolute;
   width:260px; height:260px;
   border-radius:999px;
-  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.22), rgba(90,190,255,.16) 45%, transparent 72%);
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.22), var(--orbGlowA) 45%, transparent 72%);
   filter: blur(2px);
   opacity:.95;
   pointer-events:none;
@@ -131,7 +184,7 @@ body{
   box-shadow:
     0 0 0 1px rgba(255,255,255,.08) inset,
     0 18px 55px rgba(0,0,0,.32),
-    0 0 40px rgba(120,220,255,.22);
+    0 0 40px var(--accentGlow);
 }
 .btn:active{ transform: scale(.995); }
 
@@ -196,8 +249,12 @@ body{
   inset:0;
   z-index:9999;
   background: rgba(0,0,0,.35);
+
+  /* закрыто по умолчанию */
   display:none;
 }
+
+/* ✅ открытие/закрытие плавно */
 .langOverlay.show{ display:block; }
 
 .langSheet{
@@ -205,19 +262,35 @@ body{
   left:12px;
   right:12px;
 
-  /* ✅ ОТКРЫВАЕТСЯ ВНИЗУ */
-  bottom: calc(12px + env(safe-area-inset-bottom));
+  /* ✅ подняли вверх (как ты хотел) */
+  bottom: 60px;
 
-  border-radius:20px;
-  background: rgba(20,40,70,.65);
-  border: 1px solid rgba(255,255,255,.18);
+  border-radius:24px;
+  background: rgba(20, 80, 140, .55);
+  border: 1px solid rgba(255,255,255,.22);
 
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
 
-  box-shadow: 0 24px 70px rgba(0,0,0,.45);
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.45),
+    0 0 0 1px rgba(255,255,255,.06) inset;
 
   overflow:hidden;
+
+  /* старт закрыт */
+  transform: translateY(110%);
+  opacity: 0;
+
+  transition:
+    transform .45s cubic-bezier(.22,.8,.22,1),
+    opacity   .35s ease;
+}
+
+/* ✅ когда открыт */
+.langOverlay.show .langSheet{
+  transform: translateY(0);
+  opacity: 1;
 }
 
 .langSheetHeader{
@@ -244,7 +317,6 @@ body{
 }
 
 .langList{
-  /* ✅ ВИДНО 40% экрана, дальше скролл */
   height: 40vh;
   overflow-y:auto;
   -webkit-overflow-scrolling: touch;
@@ -267,12 +339,10 @@ body{
   border-bottom: 1px solid rgba(255,255,255,.10);
 }
 
-.langItem:active{
-  background: rgba(255,255,255,.06);
-}
+.langItem:active{ background: rgba(255,255,255,.06); }
 
 .langItem .check{
-  opacity:.0;
+  opacity:0;
   transform: scale(.9);
   transition: .15s ease;
 }
@@ -280,73 +350,4 @@ body{
 .langItem.selected .check{
   opacity:1;
   transform: scale(1);
-}
-
-/* ================================ */
-/* 🍎 iOS-style language bottom sheet */
-/* ================================ */
-
-.langSheet{
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 60px;
-
-  max-height: 40vh;              /* ✅ 40% экрана */
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-
-  background: rgba(20, 80, 140, .55);
-  border: 1px solid rgba(255,255,255,.22);
-  border-radius: 24px;
-
-  backdrop-filter: blur(22px) saturate(160%);
-  -webkit-backdrop-filter: blur(22px) saturate(160%);
-
-  box-shadow:
-    0 20px 60px rgba(0,0,0,.45),
-    0 0 0 1px rgba(255,255,255,.06) inset;
-
-  /* ⬇️ стартовое состояние (закрыт) */
-  transform: translateY(110%);
-  opacity: 0;
-
-  /* ✅ плавная и медленная анимация */
-  transition:
-    transform .45s cubic-bezier(.22,.8,.22,1),
-    opacity   .35s ease;
-}
-
-/* ✅ когда открыт */
-.langOverlay.show .langSheet{
-  transform: translateY(0);
-  opacity: 1;
-}
-
-/* ===== FULLSCREEN NO GAP (iOS) ===== */
-html, body {
-  height: 100%;
-  margin: 0;
-}
-
-body {
-  /* чтобы не было чёрной полосы сверху */
-  background: #2f86c7; /* поставь свой основной голубой */
-}
-
-/* главный контейнер страницы (если у тебя другой id/class — скажи, я подстрою) */
-.page,
-.screen,
-#app,
-main {
-  min-height: calc(var(--vh, 100vh));
-}
-
-/* если где-то есть отступ сверху (часто делают под “шапку”) — убиваем */
-.page,
-.screen,
-#app,
-main {
-  padding-top: 0 !important;
-  margin-top: 0 !important;
 }
