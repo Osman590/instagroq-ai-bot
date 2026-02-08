@@ -104,18 +104,21 @@ def api_chat():
 
     time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    log_text = (
-        "🧩 Mini App чат\n"
-        f"🕒 {time_str}\n"
-        f"👤 {tg_first_name} (@{tg_username})\n"
-        f"🆔 user_id: {tg_user_id}\n"
-        f"💬 USER: {text}\n"
-        f"🤖 AI: {reply}"
-    )
+   # 1️⃣ отдельное сообщение — USER
+send_log_to_group(
+    "🧩 Mini App — USER\n"
+    f"🕒 {time_str}\n"
+    f"👤 {tg_first_name} (@{tg_username})\n"
+    f"🆔 user_id: {tg_user_id}\n"
+    f"💬 {text}"
+)
 
-    ok, info = send_log_to_group(log_text)
-    if not ok:
-        # Чтобы ты видел причину в Railway (в ответе MiniApp это не мешает)
-        print("TELEGRAM LOG ERROR:", info)
+# 2️⃣ отдельное сообщение — AI
+send_log_to_group(
+    "🤖 Mini App — AI\n"
+    f"🕒 {time_str}\n"
+    f"🆔 user_id: {tg_user_id}\n"
+    f"{reply}"
+)
 
     return jsonify({"reply": reply})
