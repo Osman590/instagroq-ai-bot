@@ -10,7 +10,10 @@
   padding: 6px 14px;
   padding-top: calc(6px + env(safe-area-inset-top));
 
-  background: rgba(255,255,255,.01);
+  /* 🔧 FIX: жёсткий тёмный фон, чтобы iOS не подсвечивал */
+  background: rgba(8,16,30,.55);
+  background-color: rgba(8,16,30,.55);
+
   backdrop-filter: blur(32px) saturate(210%);
   -webkit-backdrop-filter: blur(32px) saturate(210%);
 
@@ -53,7 +56,10 @@
   padding:10px 12px;
   padding-bottom: calc(10px + env(safe-area-inset-bottom));
 
-  background: rgba(255,255,255,.03);
+  /* 🔧 FIX: жёсткий тёмный фон, чтобы не было белой вспышки */
+  background: rgba(8,16,30,.55);
+  background-color: rgba(8,16,30,.55);
+
   backdrop-filter: blur(32px) saturate(210%);
   -webkit-backdrop-filter: blur(32px) saturate(210%);
 
@@ -69,9 +75,18 @@
   outline:none;
   font-size:15px;
   color:#0b1220;
+
+  /* 🔧 FIX: отключаем iOS автоперерисовку */
   background: rgba(255,255,255,.92);
+  -webkit-appearance: none;
+  appearance: none;
+
   box-shadow: 0 10px 24px rgba(0,0,0,.16);
   caret-color: var(--accent2);
+}
+
+.input input:focus{
+  background: rgba(255,255,255,.92);
 }
 
 .input button{
