@@ -2,35 +2,18 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <!-- ✅ FIX: запрет zoom/pinch + фикс масштаба -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>InstaGroq AI</title>
 
+  <!-- Telegram WebApp API -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- ✅ ТЕМА: применяем сразу (без мигания) -->
-  <script>
-    (function(){
-      const KEY = "miniapp_theme_v1";
-      function getTheme(){
-        const url = new URL(window.location.href);
-        const qp = url.searchParams.get("theme");
-        if (qp) return qp;
-        try{ return localStorage.getItem(KEY) || "blue"; }catch(e){ return "blue"; }
-      }
-      document.documentElement.setAttribute("data-theme", getTheme());
-    })();
-  </script>
-
+  <!-- CSS -->
   <link rel="stylesheet" href="./css/index.css?v=3">
 </head>
 
 <body>
-  <!-- ✅ КНОПКА ТЕМЫ (левый верх) -->
-  <button class="themePill" id="themeBtn" type="button" aria-haspopup="dialog" aria-expanded="false">
-    Цвет: Синий
-    <span class="chev">▾</span>
-  </button>
-
   <!-- шары -->
   <div class="orb o1"></div>
   <div class="orb o2"></div>
@@ -64,8 +47,11 @@
       <div class="sub" id="subText">Быстрые ответы • Память • Заметки</div>
       <div class="ver" id="verText">miniapp v2</div>
 
+      <!-- ✅ выбор языка -->
       <div class="langBlock">
         <div class="langTitle" id="langTitle">Язык интерфейса</div>
+
+        <!-- выглядит как select, но открывает нижний список -->
         <button class="langPill" id="langBtn" type="button" aria-haspopup="dialog" aria-expanded="false">
           Русский (RU)
           <span class="chev">▾</span>
@@ -74,27 +60,21 @@
     </div>
   </div>
 
+  <!-- ✅ НИЖНИЙ СКРОЛЛ-СПИСОК (40% высоты) -->
   <div class="langOverlay" id="langOverlay" aria-hidden="true">
     <div class="langSheet" role="dialog" aria-modal="true" aria-label="Language selector">
       <div class="langSheetHeader">
         <div class="langSheetTitle" id="langSheetTitle">Язык</div>
         <button class="langClose" id="langClose" type="button">✕</button>
       </div>
-      <div class="langList" id="langList"></div>
-    </div>
-  </div>
 
-  <!-- ✅ Bottom Sheet Theme -->
-  <div class="themeOverlay" id="themeOverlay" aria-hidden="true">
-    <div class="themeSheet" role="dialog" aria-modal="true" aria-label="Theme selector">
-      <div class="themeSheetHeader">
-        <div class="themeSheetTitle" id="themeSheetTitle">Цвет</div>
-        <button class="themeClose" id="themeClose" type="button">✕</button>
+      <div class="langList" id="langList">
+        <!-- пункты создаются в JS -->
       </div>
-      <div class="themeList" id="themeList"></div>
     </div>
   </div>
 
+  <!-- JS -->
   <script type="module" src="./js/index.js?v=3"></script>
 </body>
 </html>
