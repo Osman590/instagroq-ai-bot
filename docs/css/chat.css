@@ -59,7 +59,11 @@
 /* user: ✅ по теме (не фикс-синий) */
 .user{
   align-self:flex-end;
-  background: linear-gradient(180deg, var(--accent1, #3aa0ff) 0%, var(--accent2, #0a84ff) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--accent1, #3aa0ff) 0%,
+    var(--accent2, #0a84ff) 100%
+  );
   border: 1px solid rgba(255,255,255,.10);
 }
 
@@ -89,7 +93,6 @@
   align-items: center;
   justify-content: center;
 
-  /* ✅ чтобы typing не “вылетал” снизу как обычные сообщения */
   opacity: 1;
   animation: none;
 }
@@ -128,4 +131,27 @@
     opacity: .95;
     transform: translateY(-2px) scale(1.15);
   }
+}
+
+/* ================================================= */
+/* ✅ BLACK THEME — ТОЛЬКО ЦВЕТА, НИЧЕГО БОЛЬШЕ */
+/* ================================================= */
+
+:root[data-theme="black"] .chat{
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,.55) 0%,
+    rgba(0,0,0,.78) 100%
+  );
+}
+
+:root[data-theme="black"] .msg.bot{
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 10px 28px rgba(0,0,0,.45);
+}
+
+:root[data-theme="black"] .msg.bot.typing{
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.14);
 }
