@@ -22,7 +22,7 @@ BOT_TOKEN = (os.getenv("BOT_TOKEN") or "").strip()
 MINIAPP_URL = (os.getenv("MINIAPP_URL") or "").strip()
 
 # ✅ В Railway у тебя переменная LOG_GROUP_ID (супергруппа -100...)
-LOG_GROUP_ID = int((os.getenv("LOG_GROUP_ID") or "0").strip())
+LOG_GROUP_ID = int((os.getenv("TARGET_GROUP_ID") or "0").strip())
 
 # ✅ username бота (без @). Можно НЕ задавать, если не нужно для групп.
 BOT_USERNAME = (os.getenv("BOT_USERNAME") or "InstaGroqai_bot").strip()
