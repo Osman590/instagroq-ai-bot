@@ -15,6 +15,9 @@ from telegram.ext import (
     filters,
 )
 
+from groq_client import ask_groq  # ✅ ИИ
+
+
 # ---------- ENV ----------
 BOT_TOKEN = (os.getenv("BOT_TOKEN") or "").strip()
 MINIAPP_URL = (os.getenv("MINIAPP_URL") or "").strip()
@@ -99,17 +102,31 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-# ✅ ЛОВИМ ОБЫЧНЫЕ СООБЩЕНИЯ В ГРУППЕ/ЛС (пока тест-ответ)
+# ---------- GROUP / DM CHAT ----------
 async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.message
     if not msg or not msg.text:
         return
 
-    # если хочешь реагировать только в группах — раскомментируй:
-    # if msg.chat.type not in ("group", "supergroup"):
-    #     return
+    text = msg.text.strip()
 
-    await msg.reply_text("✅ Я вижу сообщения в чате")
+    # ❌ игнорируем команды
+    if text.startswith("/"):
+        return
+
+    # 🧠 запрос к ИИ
+    try:
+        reply = ask_groq(
+            text,
+            lang="ru",
+            style="steps",
+            persona="friendly",
+        )
+    except Exception:
+        await msg.reply_text("⚠️ Ошибка ИИ")
+        return
+
+    await msg.reply_text(reply)
 
 
 # ---------- START BOT ----------
@@ -122,7 +139,7 @@ def start_bot():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(on_button))
 
-    # ✅ ВАЖНО: handler на обычный текст (чтобы бот писал в группе)
+    # ✅ обычные сообщения (группа + личка)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_text))
 
     print("🤖 Telegram bot started")
