@@ -15,19 +15,23 @@
   --glass2: rgba(255,255,255,.06);
   --stroke: rgba(255,255,255,.18);
 
-  --glow: rgba(90,190,255,.30);
+  /* ✅ свечения (используются в фоне/кубах, чтобы темы реально работали) */
+  --glow:  rgba(90,190,255,.30);
   --glow2: rgba(120,220,255,.22);
+  --glow3: rgba(255,255,255,.12);
 }
 
 /* ✅ ТЕМЫ (меняют только переменные) */
 :root[data-theme="black"]{
-  --bgTop:#0b0e14;
-  --bgMid:#070a10;
-  --bgBot:#030509;
+  /* ✅ ДЕЛАЕМ ЕЩЕ ЧЕРНЕЕ */
+  --bgTop:#05070b;
+  --bgMid:#03050a;
+  --bgBot:#010308;
 
-  /* слабое холодное свечение, чтобы кубы читались */
-  --glow:  rgba(160,190,255,.14);
-  --glow2: rgba(120,160,255,.16);
+  /* ✅ слабое холодное свечение, чтобы кубы/текст читались */
+  --glow:  rgba(120,150,210,.14);
+  --glow2: rgba(90,120,190,.18);
+  --glow3: rgba(255,255,255,.07);
 }
 :root[data-theme="purple"]{
   --bgTop:#3b1b6a;
@@ -35,6 +39,7 @@
   --bgBot:#0a0716;
   --glow: rgba(200,120,255,.25);
   --glow2: rgba(120,200,255,.18);
+  --glow3: rgba(255,255,255,.12);
 }
 :root[data-theme="green"]{
   --bgTop:#0b6a55;
@@ -42,6 +47,7 @@
   --bgBot:#061a16;
   --glow: rgba(120,255,210,.22);
   --glow2: rgba(120,220,255,.18);
+  --glow3: rgba(255,255,255,.11);
 }
 :root[data-theme="gray"]{
   --bgTop:#2a3442;
@@ -49,6 +55,7 @@
   --bgBot:#0b1018;
   --glow: rgba(200,220,255,.16);
   --glow2: rgba(120,220,255,.16);
+  --glow3: rgba(255,255,255,.10);
 }
 
 *{box-sizing:border-box}
@@ -71,11 +78,11 @@ body{
 
   overflow:hidden;
 
-  /* ✅ ЯРКИЙ голубой + “световые пятна” */
+  /* ✅ фон теперь реально зависит от темы через --glow/--glow2/--glow3 */
   background:
-    radial-gradient(900px 650px at 20% 18%, rgba(180,245,255,.35) 0%, transparent 60%),
-    radial-gradient(1100px 800px at 80% 70%, rgba(90,190,255,.30) 0%, transparent 58%),
-    radial-gradient(520px 420px at 55% 35%, rgba(255,255,255,.12) 0%, transparent 65%),
+    radial-gradient(900px 650px at 20% 18%, var(--glow) 0%, transparent 60%),
+    radial-gradient(1100px 800px at 80% 70%, var(--glow2) 0%, transparent 58%),
+    radial-gradient(520px 420px at 55% 35%, var(--glow3) 0%, transparent 65%),
     linear-gradient(180deg, var(--bgTop) 0%, var(--bgMid) 50%, var(--bgBot) 100%);
 }
 
@@ -91,10 +98,10 @@ body{
   backdrop-filter: blur(14px) saturate(160%);
   -webkit-backdrop-filter: blur(14px) saturate(160%);
 
-  /* ✅ яркие “углы/свечение” */
+  /* ✅ свечение кубов тоже theme-aware */
   box-shadow:
     0 0 0 1px rgba(255,255,255,.07) inset,
-    0 0 34px rgba(120,220,255,.25),
+    0 0 34px var(--glow2),
     0 22px 60px rgba(0,0,0,.26);
 
   pointer-events:none;
