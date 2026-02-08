@@ -3,26 +3,25 @@ const API_BASE = "https://instagroq-ai-bot-production.up.railway.app";
 const API_CHAT = API_BASE + "/api/chat";
 
 function getLang(){
-  try{
-    return localStorage.getItem("miniapp_lang_v1") || "ru";
-  }catch(e){
-    return "ru";
-  }
+  try { return localStorage.getItem("miniapp_lang_v1") || "ru"; }
+  catch(e){ return "ru"; }
 }
 
 function getStyle(){
-  try{
-    return localStorage.getItem("ai_style") || "steps";
-  }catch(e){
-    return "steps";
-  }
+  try { return localStorage.getItem("ai_style") || "steps"; }
+  catch(e){ return "steps"; }
 }
 
 function getPersona(){
+  try { return localStorage.getItem("ai_persona") || "friendly"; }
+  catch(e){ return "friendly"; }
+}
+
+function getInitData(){
   try{
-    return localStorage.getItem("ai_persona") || "friendly";
+    return window.Telegram?.WebApp?.initData || "";
   }catch(e){
-    return "friendly";
+    return "";
   }
 }
 
@@ -32,6 +31,7 @@ export async function askAI(promptText) {
     lang: getLang(),
     style: getStyle(),
     persona: getPersona(),
+    initData: getInitData(), // ✅ КЛЮЧЕВО: для проверки пользователя на сервере
   };
 
   const r = await fetch(API_CHAT, {
