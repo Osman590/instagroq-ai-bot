@@ -16,20 +16,16 @@ from telegram.ext import (
     filters,
 )
 
-from groq_client import ask_groq
-
-
 # ---------- ENV ----------
 BOT_TOKEN = (os.getenv("BOT_TOKEN") or "").strip()
 MINIAPP_URL = (os.getenv("MINIAPP_URL") or "").strip()
 
+# 👇 ID группы для логов
+TARGET_GROUP_ID = -4697406654
+
 
 def is_valid_https_url(url: str) -> bool:
     return url.startswith("https://") and len(url) > len("https://")
-
-
-def now_time() -> str:
-    return datetime.now().strftime("%H:%M:%S")
 
 
 # ---------- KEYBOARDS ----------
@@ -107,32 +103,31 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
-# ---------- GROUP / DM CHAT ----------
+# ---------- LOG MESSAGES TO GROUP ----------
 async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.message
     if not msg or not msg.text:
         return
 
-    text = msg.text.strip()
+    user = msg.from_user
+    chat = msg.chat
 
-    if text.startswith("/"):
-        return
+    time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    try:
-        reply = ask_groq(
-            text,
-            lang="ru",
-            style="steps",
-            persona="friendly",
-        )
-    except Exception:
-        await msg.reply_text("⚠️ Ошибка ИИ")
-        return
+    username = user.username or "—"
+    full_name = f"{user.first_name or ''} {user.last_name or ''}".strip()
 
-    time_label = now_time()
+    log_text = (
+        "📩 Новое сообщение\n"
+        f"🕒 {time_str}\n"
+        f"👤 {full_name} (@{username})\n"
+        f"🆔 user_id: {user.id}\n"
+        f"💬 {msg.text}"
+    )
 
-    await msg.reply_text(
-        f"🕒 {time_label}\n\n{reply}"
+    await context.bot.send_message(
+        chat_id=TARGET_GROUP_ID,
+        text=log_text,
     )
 
 
@@ -145,6 +140,8 @@ def start_bot():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(on_button))
+
+    # 👇 ловим все обычные сообщения
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_text))
 
     print("🤖 Telegram bot started")
