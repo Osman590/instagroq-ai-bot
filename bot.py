@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from telegram import (
     Update,
@@ -15,7 +16,7 @@ from telegram.ext import (
     filters,
 )
 
-from groq_client import ask_groq  # ✅ ИИ
+from groq_client import ask_groq
 
 
 # ---------- ENV ----------
@@ -25,6 +26,10 @@ MINIAPP_URL = (os.getenv("MINIAPP_URL") or "").strip()
 
 def is_valid_https_url(url: str) -> bool:
     return url.startswith("https://") and len(url) > len("https://")
+
+
+def now_time() -> str:
+    return datetime.now().strftime("%H:%M:%S")
 
 
 # ---------- KEYBOARDS ----------
@@ -110,11 +115,9 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = msg.text.strip()
 
-    # ❌ игнорируем команды
     if text.startswith("/"):
         return
 
-    # 🧠 запрос к ИИ
     try:
         reply = ask_groq(
             text,
@@ -126,7 +129,11 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await msg.reply_text("⚠️ Ошибка ИИ")
         return
 
-    await msg.reply_text(reply)
+    time_label = now_time()
+
+    await msg.reply_text(
+        f"🕒 {time_label}\n\n{reply}"
+    )
 
 
 # ---------- START BOT ----------
@@ -138,8 +145,6 @@ def start_bot():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(on_button))
-
-    # ✅ обычные сообщения (группа + личка)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_text))
 
     print("🤖 Telegram bot started")
