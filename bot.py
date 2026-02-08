@@ -11,6 +11,8 @@ from telegram.ext import (
     CommandHandler,
     CallbackQueryHandler,
     ContextTypes,
+    MessageHandler,
+    filters,
 )
 
 # ---------- ENV ----------
@@ -97,6 +99,19 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
 
+# ✅ ЛОВИМ ОБЫЧНЫЕ СООБЩЕНИЯ В ГРУППЕ/ЛС (пока тест-ответ)
+async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = update.message
+    if not msg or not msg.text:
+        return
+
+    # если хочешь реагировать только в группах — раскомментируй:
+    # if msg.chat.type not in ("group", "supergroup"):
+    #     return
+
+    await msg.reply_text("✅ Я вижу сообщения в чате")
+
+
 # ---------- START BOT ----------
 def start_bot():
     if not BOT_TOKEN:
@@ -106,6 +121,9 @@ def start_bot():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(on_button))
+
+    # ✅ ВАЖНО: handler на обычный текст (чтобы бот писал в группе)
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_text))
 
     print("🤖 Telegram bot started")
     app.run_polling(stop_signals=None, close_loop=False)
