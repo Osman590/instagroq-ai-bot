@@ -1,3 +1,4 @@
+// docs/js/telegram.js
 export const tg = window.Telegram?.WebApp || null;
 
 export function applyViewportHeight() {
