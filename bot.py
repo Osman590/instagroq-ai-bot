@@ -20,7 +20,7 @@ from telegram.ext import (
 BOT_TOKEN = (os.getenv("BOT_TOKEN") or "").strip()
 MINIAPP_URL = (os.getenv("MINIAPP_URL") or "").strip()
 
-# 👇 ID группы для логов
+# ✅ ID группы для логов (можешь оставить так, либо позже вынесем в ENV)
 TARGET_GROUP_ID = -4697406654
 
 
@@ -47,9 +47,7 @@ def main_menu() -> InlineKeyboardMarkup:
             )
         ])
 
-    keyboard.append([
-        InlineKeyboardButton("⭐ Купить пакет", callback_data="buy_pack"),
-    ])
+    keyboard.append([InlineKeyboardButton("⭐ Купить пакет", callback_data="buy_pack")])
 
     keyboard.append([
         InlineKeyboardButton("⚙️ Настройки", callback_data="settings"),
@@ -110,25 +108,21 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     user = msg.from_user
-    chat = msg.chat
-
     time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    username = user.username or "—"
-    full_name = f"{user.first_name or ''} {user.last_name or ''}".strip()
+    username = f"@{user.username}" if user and user.username else "—"
+    full_name = ((user.first_name or "") + " " + (user.last_name or "")).strip() if user else "—"
+    user_id = user.id if user else "—"
 
     log_text = (
         "📩 Новое сообщение\n"
         f"🕒 {time_str}\n"
-        f"👤 {full_name} (@{username})\n"
-        f"🆔 user_id: {user.id}\n"
+        f"👤 {full_name} ({username})\n"
+        f"🆔 user_id: {user_id}\n"
         f"💬 {msg.text}"
     )
 
-    await context.bot.send_message(
-        chat_id=TARGET_GROUP_ID,
-        text=log_text,
-    )
+    await context.bot.send_message(chat_id=TARGET_GROUP_ID, text=log_text)
 
 
 # ---------- START BOT ----------
@@ -141,7 +135,7 @@ def start_bot():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(on_button))
 
-    # 👇 ловим все обычные сообщения
+    # ✅ ловим все обычные сообщения (текст) и логируем в группу
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_text))
 
     print("🤖 Telegram bot started")
