@@ -104,21 +104,17 @@ def api_chat():
 
     time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-   # 1️⃣ отдельное сообщение — USER
-send_log_to_group(
-    "🧩 Mini App — USER\n"
-    f"🕒 {time_str}\n"
-    f"👤 {tg_first_name} (@{tg_username})\n"
-    f"🆔 user_id: {tg_user_id}\n"
-    f"💬 {text}"
-)
+    # ✅ ОДНО сообщение на 1 запрос (без истории)
+    log_text = (
+        f"🕒 {time_str}\n"
+        f"👤 {tg_first_name} (@{tg_username})\n"
+        f"🆔 {tg_user_id}\n"
+        f"💬 {text}\n\n"
+        f"🤖 ИИ\n{reply}"
+    )
 
-# 2️⃣ отдельное сообщение — AI
-send_log_to_group(
-    "🤖 Mini App — AI\n"
-    f"🕒 {time_str}\n"
-    f"🆔 user_id: {tg_user_id}\n"
-    f"{reply}"
-)
+    ok, info = send_log_to_group(log_text)
+    if not ok:
+        print("TELEGRAM LOG ERROR:", info)
 
     return jsonify({"reply": reply})
