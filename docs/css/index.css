@@ -1,7 +1,7 @@
 :root{
   --vh: 100vh;
 
-  /* ✅ DEFAULT */
+  /* ✅ голубой фон */
   --bgTop:#0b5fa8;
   --bgMid:#083d74;
   --bgBot:#051f3d;
@@ -17,28 +17,6 @@
   --glow2: rgba(120,220,255,.22);
 }
 
-/* ✅ THEMES */
-:root[data-theme="blue"]{
-  --bgTop:#0b5fa8; --bgMid:#083d74; --bgBot:#051f3d;
-  --glow: rgba(90,190,255,.30); --glow2: rgba(120,220,255,.22);
-}
-:root[data-theme="black"]{
-  --bgTop:#0b0f18; --bgMid:#070b12; --bgBot:#04060b;
-  --glow: rgba(255,255,255,.12); --glow2: rgba(120,180,255,.16);
-}
-:root[data-theme="purple"]{
-  --bgTop:#3b1b6a; --bgMid:#1e123d; --bgBot:#0a0716;
-  --glow: rgba(200,120,255,.25); --glow2: rgba(120,200,255,.18);
-}
-:root[data-theme="green"]{
-  --bgTop:#0b6a55; --bgMid:#0a3d34; --bgBot:#061a16;
-  --glow: rgba(120,255,210,.22); --glow2: rgba(120,220,255,.18);
-}
-:root[data-theme="gray"]{
-  --bgTop:#2a3442; --bgMid:#1a2330; --bgBot:#0b1018;
-  --glow: rgba(200,220,255,.16); --glow2: rgba(120,220,255,.16);
-}
-
 *{box-sizing:border-box}
 html,body{height:100%; margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;}
 
@@ -47,6 +25,7 @@ body{
   color:var(--text);
   overflow:hidden;
 
+  /* ✅ ЯРКИЙ голубой + “световые пятна” */
   background:
     radial-gradient(900px 650px at 20% 18%, rgba(180,245,255,.35) 0%, transparent 60%),
     radial-gradient(1100px 800px at 80% 70%, rgba(90,190,255,.30) 0%, transparent 58%),
@@ -78,7 +57,6 @@ body{
 .cube.small{ width:60px; height:60px; border-radius:16px; opacity:.82; }
 .cube.tiny{ width:34px; height:34px; border-radius:12px; opacity:.74; }
 
-/* ✅ анимации в разные стороны */
 .f1{ animation: drift1 10s ease-in-out infinite; }
 .f2{ animation: drift2 12s ease-in-out infinite; }
 .f3{ animation: drift3 11s ease-in-out infinite; }
@@ -118,7 +96,6 @@ body{
   z-index:2;
 }
 
-/* ✅ карточка стекло */
 .card{
   width:min(520px, 100%);
   padding:22px;
@@ -167,7 +144,6 @@ body{
   opacity:.55;
 }
 
-/* ✅ блок языка снизу */
 .langBlock{
   margin-top:16px;
   border-top: 1px solid rgba(255,255,255,.14);
@@ -180,7 +156,6 @@ body{
   text-align:center;
 }
 
-/* ✅ “пилюля” выбора языка */
 .langPill{
   width:100%;
   border-radius:18px;
@@ -207,9 +182,6 @@ body{
 .langPill:active{ transform: scale(.995); }
 .chev{ opacity:.9; }
 
-/* ========================= */
-/* ✅ Bottom Sheet Languages */
-/* ========================= */
 .langOverlay{
   position:fixed;
   inset:0;
@@ -233,18 +205,7 @@ body{
   -webkit-backdrop-filter: blur(18px) saturate(160%);
 
   box-shadow: 0 24px 70px rgba(0,0,0,.45);
-
   overflow:hidden;
-
-  transform: translateY(110%);
-  opacity: 0;
-  transition:
-    transform .45s cubic-bezier(.22,.8,.22,1),
-    opacity   .35s ease;
-}
-.langOverlay.show .langSheet{
-  transform: translateY(0);
-  opacity: 1;
 }
 
 .langSheetHeader{
@@ -255,7 +216,10 @@ body{
   border-bottom: 1px solid rgba(255,255,255,.14);
 }
 
-.langSheetTitle{ font-weight:900; letter-spacing:.2px; }
+.langSheetTitle{
+  font-weight:900;
+  letter-spacing:.2px;
+}
 
 .langClose{
   border:0;
@@ -290,122 +254,41 @@ body{
   border-bottom: 1px solid rgba(255,255,255,.10);
 }
 
-.langItem:active{ background: rgba(255,255,255,.06); }
-
-.langItem .check{ opacity:0; transform: scale(.9); transition: .15s ease; }
-.langItem.selected .check{ opacity:1; transform: scale(1); }
-
-/* ========================= */
-/* ✅ THEME BUTTON + SHEET */
-/* ========================= */
-.themePill{
-  position: fixed;
-  top: calc(10px + env(safe-area-inset-top));
-  left: 10px;
-  z-index: 10000;
-
-  padding: 10px 12px;
-  border-radius: 16px;
-
-  background: rgba(255,255,255,.10);
-  border: 1px solid rgba(255,255,255,.18);
-  color: rgba(255,255,255,.92);
-
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-
-  font-size: 14px;
-  font-weight: 900;
-
-  display:flex;
-  align-items:center;
-  gap:10px;
-
-  box-shadow: 0 12px 28px rgba(0,0,0,.22);
+.langItem:active{
+  background: rgba(255,255,255,.06);
 }
-.themePill:active{ transform: scale(.995); }
 
-.themeOverlay{
-  position:fixed;
-  inset:0;
-  z-index:9998;
-  background: rgba(0,0,0,.35);
-  display:none;
+.langItem .check{
+  opacity:.0;
+  transform: scale(.9);
+  transition: .15s ease;
 }
-.themeOverlay.show{ display:block; }
 
-.themeSheet{
-  position:absolute;
-  left:12px;
-  right:12px;
-  bottom: calc(12px + env(safe-area-inset-bottom));
+.langItem.selected .check{
+  opacity:1;
+  transform: scale(1);
+}
 
-  border-radius:20px;
-  background: rgba(20,40,70,.65);
-  border: 1px solid rgba(255,255,255,.18);
-
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-
-  box-shadow: 0 24px 70px rgba(0,0,0,.45);
-
-  overflow:hidden;
-
+/* ✅ открытие снизу плавно */
+.langSheet{
   transform: translateY(110%);
   opacity: 0;
   transition:
     transform .45s cubic-bezier(.22,.8,.22,1),
     opacity   .35s ease;
 }
-.themeOverlay.show .themeSheet{
+
+.langOverlay.show .langSheet{
   transform: translateY(0);
   opacity: 1;
 }
 
-.themeSheetHeader{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:14px 14px;
-  border-bottom: 1px solid rgba(255,255,255,.14);
+/* =============================== */
+/* ✅ FIX MENU: без “резинки”/зума */
+/* =============================== */
+html, body{
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+  touch-action: manipulation;
 }
-
-.themeSheetTitle{ font-weight:900; letter-spacing:.2px; }
-
-.themeClose{
-  border:0;
-  background: rgba(255,255,255,.10);
-  color: rgba(255,255,255,.92);
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius:12px;
-  padding:8px 10px;
-  font-weight:900;
-}
-
-.themeList{
-  height: 40vh;
-  overflow-y:auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.themeItem{
-  width:100%;
-  text-align:left;
-  padding:14px 14px;
-  border:0;
-  background: transparent;
-  color: rgba(255,255,255,.94);
-  font-size:16px;
-  font-weight:800;
-
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-
-  border-bottom: 1px solid rgba(255,255,255,.10);
-}
-
-.themeItem:active{ background: rgba(255,255,255,.06); }
-
-.themeItem .check{ opacity:0; transform: scale(.9); transition: .15s ease; }
-.themeItem.selected .check{ opacity:1; transform: scale(1); }
