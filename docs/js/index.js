@@ -21,6 +21,7 @@ if (tg) {
 
 // ===== language =====
 const STORAGE_LANG = "miniapp_lang_v1";
+const STORAGE_THEME = "miniapp_theme_v1";
 
 const chatBtn = document.getElementById("chatBtn");
 const subText = document.getElementById("subText");
@@ -32,6 +33,13 @@ const langOverlay = document.getElementById("langOverlay");
 const langList = document.getElementById("langList");
 const langClose = document.getElementById("langClose");
 const langSheetTitle = document.getElementById("langSheetTitle");
+
+// ✅ theme UI
+const themeBtn = document.getElementById("themeBtn");
+const themeOverlay = document.getElementById("themeOverlay");
+const themeList = document.getElementById("themeList");
+const themeClose = document.getElementById("themeClose");
+const themeSheetTitle = document.getElementById("themeSheetTitle");
 
 const I18N = {
   ru: { btn:"Чат с ИИ", sub:"Быстрые ответы • Память • Заметки", ver:"miniapp v2", lang:"Язык интерфейса", sheet:"Язык" },
@@ -59,13 +67,58 @@ const LANGS = [
   { code:"fr", label:"Français (FR)" },
 ];
 
+const THEMES = [
+  { code:"blue", label:"Синий" },
+  { code:"black", label:"Черный" },
+  { code:"purple", label:"Фиолетовый" },
+  { code:"green", label:"Зеленый" },
+  { code:"gray", label:"Серый" },
+];
+
 function getSavedLang(){
   try{ return localStorage.getItem(STORAGE_LANG) || "ru"; }
   catch(e){ return "ru"; }
 }
-
 function saveLang(lang){
   try{ localStorage.setItem(STORAGE_LANG, lang); }catch(e){}
+}
+
+function getSavedTheme(){
+  try{ return localStorage.getItem(STORAGE_THEME) || "blue"; }
+  catch(e){ return "blue"; }
+}
+function saveTheme(theme){
+  try{ localStorage.setItem(STORAGE_THEME, theme); }catch(e){}
+}
+function applyTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme || "blue");
+}
+function themeLabel(theme){
+  const f = THEMES.find(x => x.code === theme);
+  return f ? f.label : "Синий";
+}
+
+function paintSelectedLang(lang){
+  const items = langList.querySelectorAll(".langItem");
+  items.forEach(btn => {
+    const code = btn.getAttribute("data-lang");
+    btn.classList.toggle("selected", code === lang);
+  });
+}
+
+function paintSelectedTheme(theme){
+  const items = themeList.querySelectorAll(".themeItem");
+  items.forEach(btn => {
+    const code = btn.getAttribute("data-theme");
+    btn.classList.toggle("selected", code === theme);
+  });
+}
+
+function setChatLink(lang, theme){
+  const baseHref = "./chat.html?v=2";
+  chatBtn.href = baseHref
+    + "&lang=" + encodeURIComponent(lang)
+    + "&theme=" + encodeURIComponent(theme);
 }
 
 function setLang(lang){
@@ -77,27 +130,25 @@ function setLang(lang){
   langTitle.textContent = t.lang;
   langSheetTitle.textContent = t.sheet;
 
-  // pill text
   const found = LANGS.find(x => x.code === lang);
   langBtn.childNodes[0].nodeValue = (found ? found.label : "Русский (RU)") + " ";
 
-  // pass lang to chat.html
-  const baseHref = "./chat.html?v=2";
-  chatBtn.href = baseHref + "&lang=" + encodeURIComponent(lang);
-
-  // persist
   saveLang(lang);
+  paintSelectedLang(lang);
 
-  // update selected UI
-  paintSelected(lang);
+  const theme = getSavedTheme();
+  setChatLink(lang, theme);
 }
 
-function paintSelected(lang){
-  const items = langList.querySelectorAll(".langItem");
-  items.forEach(btn => {
-    const code = btn.getAttribute("data-lang");
-    btn.classList.toggle("selected", code === lang);
-  });
+function setTheme(theme){
+  applyTheme(theme);
+  saveTheme(theme);
+  paintSelectedTheme(theme);
+
+  themeBtn.childNodes[0].nodeValue = "Цвет: " + themeLabel(theme) + " ";
+
+  const lang = getSavedLang();
+  setChatLink(lang, theme);
 }
 
 function openLang(){
@@ -105,14 +156,23 @@ function openLang(){
   langOverlay.setAttribute("aria-hidden", "false");
   langBtn.setAttribute("aria-expanded", "true");
 }
-
 function closeLang(){
   langOverlay.classList.remove("show");
   langOverlay.setAttribute("aria-hidden", "true");
   langBtn.setAttribute("aria-expanded", "false");
 }
 
-// build list once
+function openTheme(){
+  themeOverlay.classList.add("show");
+  themeOverlay.setAttribute("aria-hidden", "false");
+  themeBtn.setAttribute("aria-expanded", "true");
+}
+function closeTheme(){
+  themeOverlay.classList.remove("show");
+  themeOverlay.setAttribute("aria-hidden", "true");
+  themeBtn.setAttribute("aria-expanded", "false");
+}
+
 function buildLangList(){
   langList.innerHTML = "";
   for (const x of LANGS){
@@ -129,19 +189,37 @@ function buildLangList(){
   }
 }
 
+function buildThemeList(){
+  themeList.innerHTML = "";
+  for (const x of THEMES){
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "themeItem";
+    b.setAttribute("data-theme", x.code);
+    b.innerHTML = `<span>${x.label}</span><span class="check">✓</span>`;
+    b.addEventListener("click", () => {
+      setTheme(x.code);
+      closeTheme();
+    });
+    themeList.appendChild(b);
+  }
+}
+
 buildLangList();
+buildThemeList();
+
 setLang(getSavedLang());
+setTheme(getSavedTheme());
 
 // open/close handlers
 langBtn.addEventListener("click", openLang);
 langClose.addEventListener("click", closeLang);
+langOverlay.addEventListener("click", (e) => { if (e.target === langOverlay) closeLang(); });
 
-// click outside sheet closes
-langOverlay.addEventListener("click", (e) => {
-  if (e.target === langOverlay) closeLang();
-});
+themeBtn.addEventListener("click", openTheme);
+themeClose.addEventListener("click", closeTheme);
+themeOverlay.addEventListener("click", (e) => { if (e.target === themeOverlay) closeTheme(); });
 
-// ESC (если откроют в браузере)
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeLang();
+  if (e.key === "Escape") { closeLang(); closeTheme(); }
 });
