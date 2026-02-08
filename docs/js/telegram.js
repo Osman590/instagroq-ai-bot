@@ -19,14 +19,19 @@ export function initTelegramViewport({ chatEl = null, mode = "menu" } = {}) {
   if (tg) {
     tg.ready();
 
-    // ✅ expand ТОЛЬКО для чата
-    if (mode === "chat") {
+    // ✅ ВСЕГДА раскрываем мини-апп полностью (iOS fix)
+    if (typeof tg.expand === "function") {
       tg.expand();
     }
 
     // ❌ убираем swipe-to-close (iOS)
     if (tg.disableClosingConfirmation) {
       tg.disableClosingConfirmation();
+    }
+
+    // ❌ убираем вертикальные свайпы (iOS, частичная высота)
+    if (typeof tg.disableVerticalSwipes === "function") {
+      tg.disableVerticalSwipes();
     }
   }
 
