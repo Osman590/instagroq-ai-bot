@@ -8,7 +8,9 @@ const sendBtnEl = document.getElementById("sendBtn");
 
 const controller = createChatController({ chatEl, inputEl, sendBtnEl });
 
-initTelegramViewport(chatEl);
+// ✅ FIX: правильный вызов + режим чата (expand + правильный vh при клавиатуре)
+initTelegramViewport({ chatEl, mode: "chat" });
+
 controller.bindUI();
 initSettingsUI({ controller });
 controller.renderFromHistory();
