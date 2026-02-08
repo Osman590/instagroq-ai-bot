@@ -1,7 +1,7 @@
 :root{
   --vh: 100vh;
 
-  /* ✅ голубой фон (по умолчанию) */
+  /* ✅ DEFAULT */
   --bgTop:#0b5fa8;
   --bgMid:#083d74;
   --bgBot:#051f3d;
@@ -15,60 +15,28 @@
 
   --glow: rgba(90,190,255,.30);
   --glow2: rgba(120,220,255,.22);
-
-  /* ✅ цвета для свечения/акцента (по умолчанию голубой) */
-  --accentGlow: rgba(120,220,255,.22);
-  --cubeGlow: rgba(120,220,255,.25);
-  --orbGlowA: rgba(90,190,255,.16);
 }
 
-/* ===================== */
-/* ✅ THEMES (menu only) */
-/* ===================== */
-/* ВАЖНО: меняется только цветовая схема, остальная структура не трогается */
-
-/* black */
-html[data-theme="black"]{
-  --bgTop:#0f1520;
-  --bgMid:#0a0f18;
-  --bgBot:#05070c;
-
-  --accentGlow: rgba(255,255,255,.14);
-  --cubeGlow: rgba(255,255,255,.14);
-  --orbGlowA: rgba(255,255,255,.10);
+/* ✅ THEMES */
+:root[data-theme="blue"]{
+  --bgTop:#0b5fa8; --bgMid:#083d74; --bgBot:#051f3d;
+  --glow: rgba(90,190,255,.30); --glow2: rgba(120,220,255,.22);
 }
-
-/* purple */
-html[data-theme="purple"]{
-  --bgTop:#4a2bb8;
-  --bgMid:#2c1d72;
-  --bgBot:#140b35;
-
-  --accentGlow: rgba(190,140,255,.22);
-  --cubeGlow: rgba(190,140,255,.25);
-  --orbGlowA: rgba(190,140,255,.16);
+:root[data-theme="black"]{
+  --bgTop:#0b0f18; --bgMid:#070b12; --bgBot:#04060b;
+  --glow: rgba(255,255,255,.12); --glow2: rgba(120,180,255,.16);
 }
-
-/* green */
-html[data-theme="green"]{
-  --bgTop:#0e8a63;
-  --bgMid:#0a5a43;
-  --bgBot:#053525;
-
-  --accentGlow: rgba(110,255,190,.20);
-  --cubeGlow: rgba(110,255,190,.22);
-  --orbGlowA: rgba(110,255,190,.14);
+:root[data-theme="purple"]{
+  --bgTop:#3b1b6a; --bgMid:#1e123d; --bgBot:#0a0716;
+  --glow: rgba(200,120,255,.25); --glow2: rgba(120,200,255,.18);
 }
-
-/* gray */
-html[data-theme="gray"]{
-  --bgTop:#3a4a5a;
-  --bgMid:#22303d;
-  --bgBot:#121a22;
-
-  --accentGlow: rgba(190,210,230,.18);
-  --cubeGlow: rgba(190,210,230,.20);
-  --orbGlowA: rgba(190,210,230,.12);
+:root[data-theme="green"]{
+  --bgTop:#0b6a55; --bgMid:#0a3d34; --bgBot:#061a16;
+  --glow: rgba(120,255,210,.22); --glow2: rgba(120,220,255,.18);
+}
+:root[data-theme="gray"]{
+  --bgTop:#2a3442; --bgMid:#1a2330; --bgBot:#0b1018;
+  --glow: rgba(200,220,255,.16); --glow2: rgba(120,220,255,.16);
 }
 
 *{box-sizing:border-box}
@@ -79,7 +47,6 @@ body{
   color:var(--text);
   overflow:hidden;
 
-  /* ✅ ЯРКИЙ фон + “световые пятна” (через переменные, чтобы темы работали) */
   background:
     radial-gradient(900px 650px at 20% 18%, rgba(180,245,255,.35) 0%, transparent 60%),
     radial-gradient(1100px 800px at 80% 70%, rgba(90,190,255,.30) 0%, transparent 58%),
@@ -101,7 +68,7 @@ body{
 
   box-shadow:
     0 0 0 1px rgba(255,255,255,.07) inset,
-    0 0 34px var(--cubeGlow),
+    0 0 34px rgba(120,220,255,.25),
     0 22px 60px rgba(0,0,0,.26);
 
   pointer-events:none;
@@ -131,7 +98,7 @@ body{
   position:absolute;
   width:260px; height:260px;
   border-radius:999px;
-  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.22), var(--orbGlowA) 45%, transparent 72%);
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.22), rgba(90,190,255,.16) 45%, transparent 72%);
   filter: blur(2px);
   opacity:.95;
   pointer-events:none;
@@ -163,7 +130,6 @@ body{
   box-shadow: 0 22px 70px rgba(0,0,0,.35);
 }
 
-/* ✅ КНОПКА — прозрачное стекло */
 .btn{
   display:block;
   width:100%;
@@ -184,7 +150,7 @@ body{
   box-shadow:
     0 0 0 1px rgba(255,255,255,.08) inset,
     0 18px 55px rgba(0,0,0,.32),
-    0 0 40px var(--accentGlow);
+    0 0 40px rgba(120,220,255,.22);
 }
 .btn:active{ transform: scale(.995); }
 
@@ -249,45 +215,33 @@ body{
   inset:0;
   z-index:9999;
   background: rgba(0,0,0,.35);
-
-  /* закрыто по умолчанию */
   display:none;
 }
-
-/* ✅ открытие/закрытие плавно */
 .langOverlay.show{ display:block; }
 
 .langSheet{
   position:absolute;
   left:12px;
   right:12px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
 
-  /* ✅ подняли вверх (как ты хотел) */
-  bottom: 60px;
+  border-radius:20px;
+  background: rgba(20,40,70,.65);
+  border: 1px solid rgba(255,255,255,.18);
 
-  border-radius:24px;
-  background: rgba(20, 80, 140, .55);
-  border: 1px solid rgba(255,255,255,.22);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
 
-  backdrop-filter: blur(22px) saturate(160%);
-  -webkit-backdrop-filter: blur(22px) saturate(160%);
-
-  box-shadow:
-    0 20px 60px rgba(0,0,0,.45),
-    0 0 0 1px rgba(255,255,255,.06) inset;
+  box-shadow: 0 24px 70px rgba(0,0,0,.45);
 
   overflow:hidden;
 
-  /* старт закрыт */
   transform: translateY(110%);
   opacity: 0;
-
   transition:
     transform .45s cubic-bezier(.22,.8,.22,1),
     opacity   .35s ease;
 }
-
-/* ✅ когда открыт */
 .langOverlay.show .langSheet{
   transform: translateY(0);
   opacity: 1;
@@ -301,10 +255,7 @@ body{
   border-bottom: 1px solid rgba(255,255,255,.14);
 }
 
-.langSheetTitle{
-  font-weight:900;
-  letter-spacing:.2px;
-}
+.langSheetTitle{ font-weight:900; letter-spacing:.2px; }
 
 .langClose{
   border:0;
@@ -341,13 +292,120 @@ body{
 
 .langItem:active{ background: rgba(255,255,255,.06); }
 
-.langItem .check{
-  opacity:0;
-  transform: scale(.9);
-  transition: .15s ease;
+.langItem .check{ opacity:0; transform: scale(.9); transition: .15s ease; }
+.langItem.selected .check{ opacity:1; transform: scale(1); }
+
+/* ========================= */
+/* ✅ THEME BUTTON + SHEET */
+/* ========================= */
+.themePill{
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  left: 10px;
+  z-index: 10000;
+
+  padding: 10px 12px;
+  border-radius: 16px;
+
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.18);
+  color: rgba(255,255,255,.92);
+
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+
+  font-size: 14px;
+  font-weight: 900;
+
+  display:flex;
+  align-items:center;
+  gap:10px;
+
+  box-shadow: 0 12px 28px rgba(0,0,0,.22);
+}
+.themePill:active{ transform: scale(.995); }
+
+.themeOverlay{
+  position:fixed;
+  inset:0;
+  z-index:9998;
+  background: rgba(0,0,0,.35);
+  display:none;
+}
+.themeOverlay.show{ display:block; }
+
+.themeSheet{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+
+  border-radius:20px;
+  background: rgba(20,40,70,.65);
+  border: 1px solid rgba(255,255,255,.18);
+
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+
+  box-shadow: 0 24px 70px rgba(0,0,0,.45);
+
+  overflow:hidden;
+
+  transform: translateY(110%);
+  opacity: 0;
+  transition:
+    transform .45s cubic-bezier(.22,.8,.22,1),
+    opacity   .35s ease;
+}
+.themeOverlay.show .themeSheet{
+  transform: translateY(0);
+  opacity: 1;
 }
 
-.langItem.selected .check{
-  opacity:1;
-  transform: scale(1);
+.themeSheetHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.14);
 }
+
+.themeSheetTitle{ font-weight:900; letter-spacing:.2px; }
+
+.themeClose{
+  border:0;
+  background: rgba(255,255,255,.10);
+  color: rgba(255,255,255,.92);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius:12px;
+  padding:8px 10px;
+  font-weight:900;
+}
+
+.themeList{
+  height: 40vh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.themeItem{
+  width:100%;
+  text-align:left;
+  padding:14px 14px;
+  border:0;
+  background: transparent;
+  color: rgba(255,255,255,.94);
+  font-size:16px;
+  font-weight:800;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+
+.themeItem:active{ background: rgba(255,255,255,.06); }
+
+.themeItem .check{ opacity:0; transform: scale(.9); transition: .15s ease; }
+.themeItem.selected .check{ opacity:1; transform: scale(1); }
