@@ -1,32 +1,105 @@
-# bot_handlers.py
 import os
+from datetime import datetime
 
-from telegram import Update
+import requests
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import ContextTypes
 
-from bot_menu import main_menu
-from bot_logging import send_log_http, build_start_log
+from api import get_access
 
-
-# ---------- ENV ----------
+BOT_TOKEN = (os.getenv("BOT_TOKEN") or "").strip()
 MINIAPP_URL = (os.getenv("MINIAPP_URL") or "").strip()
+
+# лог-группа: TARGET_GROUP_ID приоритет
+GROUP_ID_RAW = (os.getenv("TARGET_GROUP_ID") or os.getenv("LOG_GROUP_ID") or "0").strip()
+try:
+    GROUP_ID = int(GROUP_ID_RAW)
+except Exception:
+    GROUP_ID = 0
+
+
+def is_valid_https_url(url: str) -> bool:
+    return url.startswith("https://") and len(url) > len("https://")
+
+
+def send_log_http(text: str):
+    if not BOT_TOKEN or not GROUP_ID:
+        return
+    try:
+        r = requests.post(
+            f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+            json={"chat_id": GROUP_ID, "text": text},
+            timeout=12,
+        )
+        if not r.ok:
+            print("LOG ERROR:", r.status_code, r.text)
+    except Exception as e:
+        print("LOG ERROR:", e)
+
+
+def build_start_log(update: Update) -> str:
+    msg = update.effective_message
+    user = update.effective_user
+    chat = update.effective_chat
+
+    time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    username = (user.username or "—") if user else "—"
+    full_name = f"{(user.first_name or '') if user else ''} {(user.last_name or '') if user else ''}".strip() or "—"
+
+    chat_type = chat.type if chat else "—"
+    chat_id = chat.id if chat else "—"
+    text = (msg.text or "").strip() if msg else ""
+
+    return (
+        "🚀 /start\n"
+        f"🕒 {time_str}\n"
+        f"👤 {full_name} (@{username})\n"
+        f"🆔 user_id: {user.id if user else '—'}\n"
+        f"💬 chat_type: {chat_type}\n"
+        f"🏷 chat_id: {chat_id}\n"
+        f"✉️ text: {text}"
+    )
+
+
+def main_menu_for_user(user_id: int) -> InlineKeyboardMarkup:
+    a = get_access(user_id) if user_id else {"is_free": False, "is_blocked": False}
+
+    keyboard = []
+
+    # если заблокирован — вообще ничего не даём открыть
+    if a.get("is_blocked"):
+        keyboard.append([InlineKeyboardButton("⛔ Доступ заблокирован", callback_data="blocked")])
+        return InlineKeyboardMarkup(keyboard)
+
+    # по умолчанию платно
+    if a.get("is_free") and is_valid_https_url(MINIAPP_URL):
+        keyboard.append([
+            InlineKeyboardButton("🚀 Открыть Mini App", web_app=WebAppInfo(url=MINIAPP_URL))
+        ])
+    else:
+        keyboard.append([
+            InlineKeyboardButton("🚀 Открыть Mini App", callback_data="need_pay")
+        ])
+
+    keyboard.append([InlineKeyboardButton("⭐ Купить пакет", callback_data="buy_pack")])
+    keyboard.append([
+        InlineKeyboardButton("⚙️ Настройки", callback_data="settings"),
+        InlineKeyboardButton("❓ Помощь", callback_data="help"),
+    ])
+
+    return InlineKeyboardMarkup(keyboard)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # 1) лог в группу
     send_log_http(build_start_log(update))
 
-    # 2) ответ пользователю
-    if update.effective_message:
-        await update.effective_message.reply_text(
-            "🤖 InstaGroq AI\n\nВыбирай действие кнопками ниже 👇",
-            reply_markup=main_menu(MINIAPP_URL),
-        )
+    user = update.effective_user
+    uid = user.id if user else 0
 
-
-# на случай групп: /start или /start@BotUserName
-async def start_from_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await start(update, context)
+    await update.effective_message.reply_text(
+        "🤖 InstaGroq AI\n\nВыбирай действие кнопками ниже 👇",
+        reply_markup=main_menu_for_user(uid),
+    )
 
 
 async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -34,11 +107,14 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     data = query.data or ""
 
-    if data == "miniapp_not_set":
+    if data == "blocked":
+        await query.message.reply_text("⛔ Тебя заблокировали. Напиши администратору.")
+        return
+
+    if data == "need_pay":
         await query.message.reply_text(
-            "⚠️ MINIAPP_URL не настроен.\n\n"
-            "Добавь в Railway → Variables:\n"
-            "MINIAPP_URL = https://<твой-github-pages>"
+            "⭐ Чтобы открыть Mini App, нужно купить пакет.\n"
+            "Нажми «Купить пакет»."
         )
         return
 
@@ -57,5 +133,5 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if data == "help":
-        await query.message.reply_text("❓ Нажми «Открыть Mini App» и пиши в чат внутри Mini App.")
+        await query.message.reply_text("❓ Если у тебя есть доступ — кнопка откроет Mini App.")
         return
