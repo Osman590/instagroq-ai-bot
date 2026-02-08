@@ -64,7 +64,7 @@ body{
     linear-gradient(180deg, var(--bgTop) 0%, var(--bgMid) 46%, var(--bgBot) 100%);
 
   background-repeat:no-repeat;
-  background-attachment: fixed;
+  background-attachment: scroll;
 
   color:var(--text);
   display:flex;
