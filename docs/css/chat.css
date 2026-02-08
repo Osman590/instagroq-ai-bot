@@ -56,10 +56,10 @@
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* user: iMessage blue */
+/* user: ✅ по теме (не фикс-синий) */
 .user{
   align-self:flex-end;
-  background: linear-gradient(180deg,#3aa0ff 0%, #0a84ff 100%);
+  background: linear-gradient(180deg, var(--accent1, #3aa0ff) 0%, var(--accent2, #0a84ff) 100%);
   border: 1px solid rgba(255,255,255,.10);
 }
 
