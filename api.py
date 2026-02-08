@@ -1,5 +1,6 @@
 import os
-from datetime import datetime
+import sqlite3
+from datetime import datetime, timezone
 from typing import Any, Dict, Tuple
 
 from flask import Flask, request, jsonify
@@ -8,70 +9,66 @@ import requests
 
 from groq_client import ask_groq
 
-# ---------- FLASK API ----------
 api = Flask(__name__)
 CORS(api)
 
-# ✅ Группа для логов (поддерживаем оба названия переменной)
-LOG_GROUP_ID = os.getenv("LOG_GROUP_ID")
-TARGET_GROUP_ID = os.getenv("TARGET_GROUP_ID")
-GROUP_ID_RAW = (LOG_GROUP_ID or TARGET_GROUP_ID or "-4697406654").strip()
-
-# ✅ Токен нужен, чтобы API мог отправлять сообщения в Telegram
+TARGET_GROUP_ID = int(os.getenv("TARGET_GROUP_ID") or "-4697406654")
 BOT_TOKEN = (os.getenv("BOT_TOKEN") or "").strip()
 
-# ✅ приводим chat_id к int (если криво — будет 0)
-try:
-    GROUP_ID = int(GROUP_ID_RAW)
-except Exception:
-    GROUP_ID = 0
+DB_PATH = os.getenv("ACCESS_DB_PATH") or "access.db"
 
 
-def send_log_to_group(text: str) -> Tuple[bool, str]:
-    """(ok, telegram_response_text)"""
-    if not BOT_TOKEN:
-        return False, "BOT_TOKEN is empty"
-    if not GROUP_ID:
-        return False, "LOG_GROUP_ID/TARGET_GROUP_ID is empty or invalid"
+def _now_ts() -> int:
+    return int(datetime.now(timezone.utc).timestamp())
 
-    # Telegram лимит ~4096 символов
-    if len(text) > 3900:
-        text = text[:3900] + "\n…(truncated)"
 
+def _db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS user_access(
+          user_id INTEGER PRIMARY KEY,
+          free_until INTEGER,
+          blocked_until INTEGER,
+          updated_at INTEGER
+        )
+        """
+    )
+    conn.commit()
+    return conn
+
+
+def _get_access(user_id: int) -> Tuple[bool, bool]:
+    """
+    returns: (is_free, is_blocked)
+    """
+    now = _now_ts()
+    with _db() as conn:
+        row = conn.execute(
+            "SELECT free_until, blocked_until FROM user_access WHERE user_id=?",
+            (user_id,),
+        ).fetchone()
+
+    free_until = row[0] if row else None
+    blocked_until = row[1] if row else None
+
+    is_free = (free_until == -1) or (isinstance(free_until, int) and free_until > now)
+    is_blocked = (blocked_until == -1) or (isinstance(blocked_until, int) and blocked_until > now)
+
+    return is_free, is_blocked
+
+
+def send_log_to_group(text: str) -> None:
+    if not BOT_TOKEN or not TARGET_GROUP_ID:
+        return
     try:
-        r = requests.post(
+        requests.post(
             f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
-            json={"chat_id": GROUP_ID, "text": text},
+            json={"chat_id": TARGET_GROUP_ID, "text": text},
             timeout=12,
         )
-        return r.ok, r.text
-    except Exception as e:
-        return False, f"requests error: {e}"
-
-
-def extract_last_user_message(raw: str) -> str:
-    """
-    Если в raw прилетел промпт/история (Conversation: ... User: ...),
-    вытаскиваем только последнее сообщение пользователя.
-    Иначе возвращаем raw как есть.
-    """
-    s = (raw or "").strip()
-    if not s:
-        return ""
-
-    # Частые маркеры "простыни"
-    if "Conversation:" in s or "\nUser:" in s or s.startswith("You are "):
-        # Берём последнюю секцию после "User:"
-        idx = s.rfind("User:")
-        if idx != -1:
-            s2 = s[idx + len("User:") :].strip()
-            # отрезаем, если дальше идёт "Assistant:"
-            cut = s2.find("\nAssistant:")
-            if cut != -1:
-                s2 = s2[:cut].strip()
-            return s2
-
-    return s
+    except Exception:
+        pass
 
 
 @api.get("/")
@@ -84,59 +81,58 @@ def health():
     return "ok"
 
 
-@api.get("/api/test-log")
-def test_log():
-    time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    ok, info = send_log_to_group(f"✅ TEST LOG from Railway\n🕒 {time_str}")
-    return (
-        jsonify(
-            {
-                "ok": ok,
-                "group_id": GROUP_ID,
-                "has_bot_token": bool(BOT_TOKEN),
-                "telegram_response": info,
-            }
-        ),
-        (200 if ok else 500),
-    )
-
-
 @api.post("/api/chat")
 def api_chat():
     data: Dict[str, Any] = request.get_json(silent=True) or {}
 
-    raw_text = (data.get("text") or "").strip()
-    if not raw_text:
+    text = (data.get("text") or "").strip()
+    if not text:
         return jsonify({"error": "empty"}), 400
-
-    # ✅ ВАЖНО: логируем ТОЛЬКО последнее сообщение пользователя (без истории/инструкций)
-    text = extract_last_user_message(raw_text)
 
     lang = data.get("lang") or "ru"
     style = data.get("style") or "steps"
     persona = data.get("persona") or "friendly"
 
-    # данные от миниаппа (если передаст)
-    tg_user_id = data.get("tg_user_id") or data.get("telegram_user_id") or "—"
+    # ✅ принимаем оба формата ключей, чтобы не ломать фронт
+    tg_user_id = data.get("tg_user_id") or data.get("telegram_user_id") or data.get("telegramUserId")
     tg_username = data.get("tg_username") or data.get("username") or "—"
     tg_first_name = data.get("tg_first_name") or data.get("first_name") or "—"
 
+    if not tg_user_id:
+        # без user_id нельзя управлять доступом
+        return jsonify({"error": "no_telegram_user"}), 403
+
+    try:
+        tg_user_id_int = int(tg_user_id)
+    except Exception:
+        return jsonify({"error": "bad_telegram_user"}), 400
+
+    is_free, is_blocked = _get_access(tg_user_id_int)
+
+    if is_blocked:
+        return jsonify({"error": "blocked"}), 403
+
+    # ✅ пока оплата не подключена — доступ по умолчанию платный
+    if not is_free:
+        return jsonify({"error": "paid_required"}), 402
+
+    # --- AI ---
     try:
         reply = ask_groq(text, lang=lang, style=style, persona=persona)
     except Exception as e:
         send_log_to_group(f"❌ Ошибка /api/chat: {e}")
         return jsonify({"error": str(e)}), 500
 
+    # --- LOG (одно сообщение: user + ai) ---
     time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        # ✅ ОДНО сообщение: USER + AI вместе
-    send_log_to_group(
-        "🕒 " + time_str + "\n"
+    log_text = (
+        "🧩 Mini App чат\n"
+        f"🕒 {time_str}\n"
         f"👤 {tg_first_name} (@{tg_username})\n"
-        f"🆔 {tg_user_id}\n"
+        f"🆔 user_id: {tg_user_id_int}\n\n"
         f"💬 {text}\n\n"
-        "🤖 ИИ\n"
-        f"{reply}"
+        f"🤖 {reply}"
     )
+    send_log_to_group(log_text)
 
     return jsonify({"reply": reply})
