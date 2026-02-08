@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -19,17 +19,26 @@ TARGET_GROUP_ID = int(os.getenv("TARGET_GROUP_ID") or "-4697406654")
 BOT_TOKEN = (os.getenv("BOT_TOKEN") or "").strip()
 
 
-def send_log_to_group(text: str):
-    if not BOT_TOKEN or not TARGET_GROUP_ID:
-        return
+def send_log_to_group(text: str) -> Tuple[bool, str]:
+    """
+    Возвращает:
+      (ok: bool, info: str)
+    """
+    if not BOT_TOKEN:
+        return False, "BOT_TOKEN is empty"
+    if not TARGET_GROUP_ID:
+        return False, "TARGET_GROUP_ID is empty"
+
     try:
-        requests.post(
+        r = requests.post(
             f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
             json={"chat_id": TARGET_GROUP_ID, "text": text},
-            timeout=8,
+            timeout=12,
         )
-    except Exception:
-        pass
+        # Вернём ответ Telegram (очень важно для диагностики)
+        return r.ok, r.text
+    except Exception as e:
+        return False, f"requests error: {e}"
 
 
 @api.get("/")
@@ -40,6 +49,21 @@ def root():
 @api.get("/health")
 def health():
     return "ok"
+
+
+# ✅ ТЕСТ: проверяем, может ли Railway отправлять в группу
+@api.get("/api/test-log")
+def test_log():
+    time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ok, info = send_log_to_group(f"✅ TEST LOG from Railway\n🕒 {time_str}")
+    return jsonify(
+        {
+            "ok": ok,
+            "target_group_id": TARGET_GROUP_ID,
+            "has_bot_token": bool(BOT_TOKEN),
+            "telegram_response": info,
+        }
+    ), (200 if ok else 500)
 
 
 @api.post("/api/chat")
@@ -88,6 +112,10 @@ def api_chat():
         f"💬 USER: {text}\n"
         f"🤖 AI: {reply}"
     )
-    send_log_to_group(log_text)
+
+    ok, info = send_log_to_group(log_text)
+    if not ok:
+        # Чтобы ты видел причину в Railway (в ответе MiniApp это не мешает)
+        print("TELEGRAM LOG ERROR:", info)
 
     return jsonify({"reply": reply})
