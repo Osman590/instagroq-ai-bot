@@ -1,4 +1,4 @@
-Есть здесь?: import { initTelegramViewport } from "./telegram.js";
+: import { initTelegramViewport } from "./telegram.js";
 import { createChatController } from "./chat.js";
 import { initSettingsUI } from "./settings.js";
 
