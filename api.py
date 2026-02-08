@@ -1,7 +1,7 @@
 import os
 import sqlite3
 from datetime import datetime
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Optional
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -32,26 +32,18 @@ def db_conn():
 def db_init():
     con = db_conn()
     cur = con.cursor()
-
-    # базовая таблица
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS access (
             user_id INTEGER PRIMARY KEY,
             is_free INTEGER DEFAULT 0,
             is_blocked INTEGER DEFAULT 0,
-            is_paid INTEGER DEFAULT 0,
-            updated_at TEXT
+            updated_at TEXT,
+            last_menu_chat_id INTEGER,
+            last_menu_message_id INTEGER
         )
         """
     )
-
-    # миграция для старых БД: добавляем is_paid если её нет
-    cur.execute("PRAGMA table_info(access)")
-    cols = [r[1] for r in cur.fetchall()]
-    if "is_paid" not in cols:
-        cur.execute("ALTER TABLE access ADD COLUMN is_paid INTEGER DEFAULT 0")
-
     con.commit()
     con.close()
 
@@ -59,8 +51,23 @@ def db_init():
 db_init()
 
 
-def _now() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+def _ensure_columns():
+    """На случай если таблица была создана раньше без колонок меню."""
+    con = db_conn()
+    cur = con.cursor()
+    try:
+        cur.execute("ALTER TABLE access ADD COLUMN last_menu_chat_id INTEGER")
+    except Exception:
+        pass
+    try:
+        cur.execute("ALTER TABLE access ADD COLUMN last_menu_message_id INTEGER")
+    except Exception:
+        pass
+    con.commit()
+    con.close()
+
+
+_ensure_columns()
 
 
 def set_free(user_id: int, value: bool) -> None:
@@ -68,42 +75,13 @@ def set_free(user_id: int, value: bool) -> None:
     cur = con.cursor()
     cur.execute(
         """
-        INSERT INTO access (user_id, is_free, is_blocked, is_paid, updated_at)
-        VALUES (
-            ?,
-            ?,
-            COALESCE((SELECT is_blocked FROM access WHERE user_id=?), 0),
-            COALESCE((SELECT is_paid FROM access WHERE user_id=?), 0),
-            ?
-        )
+        INSERT INTO access (user_id, is_free, is_blocked, updated_at)
+        VALUES (?, ?, COALESCE((SELECT is_blocked FROM access WHERE user_id=?), 0), ?)
         ON CONFLICT(user_id) DO UPDATE SET
             is_free=excluded.is_free,
             updated_at=excluded.updated_at
         """,
-        (user_id, 1 if value else 0, user_id, user_id, _now()),
-    )
-    con.commit()
-    con.close()
-
-
-def set_paid(user_id: int, value: bool) -> None:
-    con = db_conn()
-    cur = con.cursor()
-    cur.execute(
-        """
-        INSERT INTO access (user_id, is_free, is_blocked, is_paid, updated_at)
-        VALUES (
-            ?,
-            COALESCE((SELECT is_free FROM access WHERE user_id=?), 0),
-            COALESCE((SELECT is_blocked FROM access WHERE user_id=?), 0),
-            ?,
-            ?
-        )
-        ON CONFLICT(user_id) DO UPDATE SET
-            is_paid=excluded.is_paid,
-            updated_at=excluded.updated_at
-        """,
-        (user_id, user_id, user_id, 1 if value else 0, _now()),
+        (user_id, 1 if value else 0, user_id, datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
     )
     con.commit()
     con.close()
@@ -114,19 +92,13 @@ def set_blocked(user_id: int, value: bool) -> None:
     cur = con.cursor()
     cur.execute(
         """
-        INSERT INTO access (user_id, is_free, is_blocked, is_paid, updated_at)
-        VALUES (
-            ?,
-            COALESCE((SELECT is_free FROM access WHERE user_id=?), 0),
-            ?,
-            COALESCE((SELECT is_paid FROM access WHERE user_id=?), 0),
-            ?
-        )
+        INSERT INTO access (user_id, is_free, is_blocked, updated_at)
+        VALUES (?, COALESCE((SELECT is_free FROM access WHERE user_id=?), 0), ?, ?)
         ON CONFLICT(user_id) DO UPDATE SET
             is_blocked=excluded.is_blocked,
             updated_at=excluded.updated_at
         """,
-        (user_id, user_id, 1 if value else 0, user_id, _now()),
+        (user_id, user_id, 1 if value else 0, datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
     )
     con.commit()
     con.close()
@@ -135,20 +107,76 @@ def set_blocked(user_id: int, value: bool) -> None:
 def get_access(user_id: int) -> Dict[str, Any]:
     con = db_conn()
     cur = con.cursor()
-    cur.execute("SELECT is_free, is_blocked, is_paid, updated_at FROM access WHERE user_id=?", (user_id,))
+    cur.execute(
+        "SELECT is_free, is_blocked, updated_at, last_menu_chat_id, last_menu_message_id FROM access WHERE user_id=?",
+        (user_id,),
+    )
     row = cur.fetchone()
     con.close()
-
     if not row:
-        return {"user_id": user_id, "is_free": False, "is_paid": False, "is_blocked": False, "updated_at": None}
-
+        return {
+            "user_id": user_id,
+            "is_free": False,
+            "is_blocked": False,
+            "updated_at": None,
+            "last_menu_chat_id": None,
+            "last_menu_message_id": None,
+        }
     return {
         "user_id": user_id,
         "is_free": bool(row[0]),
         "is_blocked": bool(row[1]),
-        "is_paid": bool(row[2]),
-        "updated_at": row[3],
+        "updated_at": row[2],
+        "last_menu_chat_id": row[3],
+        "last_menu_message_id": row[4],
     }
+
+
+def set_last_menu(user_id: int, chat_id: int, message_id: int) -> None:
+    con = db_conn()
+    cur = con.cursor()
+    cur.execute(
+        """
+        INSERT INTO access (user_id, is_free, is_blocked, updated_at, last_menu_chat_id, last_menu_message_id)
+        VALUES (?, COALESCE((SELECT is_free FROM access WHERE user_id=?), 0),
+                COALESCE((SELECT is_blocked FROM access WHERE user_id=?), 0),
+                ?, ?, ?)
+        ON CONFLICT(user_id) DO UPDATE SET
+            last_menu_chat_id=excluded.last_menu_chat_id,
+            last_menu_message_id=excluded.last_menu_message_id,
+            updated_at=excluded.updated_at
+        """,
+        (
+            user_id,
+            user_id,
+            user_id,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            chat_id,
+            message_id,
+        ),
+    )
+    con.commit()
+    con.close()
+
+
+def clear_last_menu(user_id: int) -> None:
+    con = db_conn()
+    cur = con.cursor()
+    cur.execute(
+        """
+        UPDATE access
+        SET last_menu_chat_id=NULL, last_menu_message_id=NULL, updated_at=?
+        WHERE user_id=?
+        """,
+        (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), user_id),
+    )
+    con.commit()
+    con.close()
+
+
+def get_last_menu(user_id: int) -> Tuple[Optional[int], Optional[int]]:
+    a = get_access(user_id)
+    return a.get("last_menu_chat_id"), a.get("last_menu_message_id")
 
 
 def send_log_to_group(text: str) -> Tuple[bool, str]:
@@ -198,7 +226,7 @@ def health():
 
 @api.get("/api/test-log")
 def test_log():
-    time_str = _now()
+    time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     ok, info = send_log_to_group(f"✅ TEST LOG\n🕒 {time_str}")
     return jsonify(
         {
@@ -210,7 +238,6 @@ def test_log():
     ), (200 if ok else 500)
 
 
-# Для проверки доступа с миниаппа
 @api.get("/api/access/<int:user_id>")
 def api_access(user_id: int):
     return jsonify(get_access(user_id))
@@ -236,16 +263,13 @@ def api_chat():
     tg_first_name = data.get("tg_first_name") or data.get("first_name") or "—"
 
     # --- ACCESS CHECK ---
-    if not tg_user_id_int:
-        return jsonify({"error": "payment_required"}), 402
-
-    a = get_access(tg_user_id_int)
-
-    if a["is_blocked"]:
-        return jsonify({"error": "blocked"}), 403
-
-    # ✅ доступ есть, если FREE или PAID
-    if not (a["is_free"] or a["is_paid"]):
+    if tg_user_id_int:
+        a = get_access(tg_user_id_int)
+        if a["is_blocked"]:
+            return jsonify({"error": "blocked"}), 403
+        if not a["is_free"]:
+            return jsonify({"error": "payment_required"}), 402
+    else:
         return jsonify({"error": "payment_required"}), 402
 
     lang = data.get("lang") or "ru"
@@ -258,7 +282,7 @@ def api_chat():
         send_log_to_group(f"❌ Ошибка /api/chat: {e}")
         return jsonify({"error": str(e)}), 500
 
-    time_str = _now()
+    time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     send_log_to_group(
         f"🕒 {time_str}\n"
