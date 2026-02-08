@@ -322,3 +322,31 @@ body{
   transform: translateY(0);
   opacity: 1;
 }
+
+/* ===== FULLSCREEN NO GAP (iOS) ===== */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  /* чтобы не было чёрной полосы сверху */
+  background: #2f86c7; /* поставь свой основной голубой */
+}
+
+/* главный контейнер страницы (если у тебя другой id/class — скажи, я подстрою) */
+.page,
+.screen,
+#app,
+main {
+  min-height: calc(var(--vh, 100vh));
+}
+
+/* если где-то есть отступ сверху (часто делают под “шапку”) — убиваем */
+.page,
+.screen,
+#app,
+main {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
