@@ -1,5 +1,3 @@
-/* docs/css/base.css */
-
 :root{ --vh: 100vh; }
 
 *{
@@ -11,19 +9,11 @@ html,body{
   height:100%;
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;
-
-  /* ✅ FIX: экран НЕ тянется вниз / вверх */
-  overflow:hidden;
-  overscroll-behavior: none;
-  touch-action: manipulation;
-  -webkit-text-size-adjust: 100%;
 }
 
 /* ✅ Фон + свет (НЕ перебьётся) */
 body{
-  position: fixed;          /* 🔒 КЛЮЧ: фиксируем экран */
-  inset: 0;
-
+  position: relative;
   background:
     radial-gradient(900px 900px at 50% 42%, rgba(110,160,255,.22) 0%, rgba(30,80,160,.10) 38%, rgba(0,0,0,0) 70%),
     radial-gradient(700px 700px at 18% 18%, rgba(90,140,255,.16) 0%, rgba(0,0,0,0) 60%),
@@ -37,8 +27,8 @@ body{
   flex-direction:column;
   height: var(--vh);
   overflow:hidden;
-
   touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
 }
 
 /* ✅ Паттерн (иконки на фоне), НЕ влияет на чат */
