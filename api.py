@@ -1,9 +1,11 @@
-from typing import Dict, Any
+from typing import Any, Dict
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from groq_client import ask_groq
 
+# ---------- FLASK API ----------
 api = Flask(__name__)
 CORS(api)
 
@@ -21,7 +23,8 @@ def health():
 @api.post("/api/chat")
 def api_chat():
     """
-    Mini App → сюда:
+    Mini App → POST /api/chat
+    Body:
     {
       "text": "...",
       "lang": "ru",
@@ -41,7 +44,7 @@ def api_chat():
 
     try:
         reply = ask_groq(
-            text=text,
+            text,
             lang=lang,
             style=style,
             persona=persona,
