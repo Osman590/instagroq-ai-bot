@@ -5,7 +5,7 @@ import requests
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import ContextTypes
 
-from api import get_access
+from api import get_access, get_last_menu, set_last_menu, clear_last_menu
 
 BOT_TOKEN = (os.getenv("BOT_TOKEN") or "").strip()
 MINIAPP_URL = (os.getenv("MINIAPP_URL") or "").strip()
@@ -61,48 +61,20 @@ def build_start_log(update: Update) -> str:
     )
 
 
-def normalize_access(a: dict | None) -> dict:
-    """
-    Приводим к единому виду:
-      free: bool
-      paid: bool
-      blocked: bool
-    Поддерживаем и старые ключи is_free/is_blocked
-    """
-    a = a if isinstance(a, dict) else {}
-    free = bool(a.get("free") or a.get("is_free"))
-    paid = bool(a.get("paid") or a.get("is_paid"))
-    blocked = bool(a.get("blocked") or a.get("is_blocked"))
-    return {"free": free, "paid": paid, "blocked": blocked}
-
-
 def main_menu_for_user(user_id: int) -> InlineKeyboardMarkup:
-    a_raw = get_access(user_id) if user_id else {}
-    a = normalize_access(a_raw)
+    a = get_access(user_id) if user_id else {"is_free": False, "is_blocked": False}
 
     keyboard = []
 
-    # 1) URL не настроен
-    if not is_valid_https_url(MINIAPP_URL):
-        keyboard.append([InlineKeyboardButton("🚀 Mini App (URL не настроен)", callback_data="miniapp_not_set")])
-        keyboard.append([InlineKeyboardButton("⭐ Купить пакет", callback_data="buy_pack")])
-        keyboard.append([
-            InlineKeyboardButton("⚙️ Настройки", callback_data="settings"),
-            InlineKeyboardButton("❓ Помощь", callback_data="help"),
-        ])
-        return InlineKeyboardMarkup(keyboard)
-
-    # 2) Заблокирован
-    if a["blocked"]:
+    if a.get("is_blocked"):
         keyboard.append([InlineKeyboardButton("⛔ Доступ заблокирован", callback_data="blocked")])
-        keyboard.append([InlineKeyboardButton("❓ Помощь", callback_data="help")])
         return InlineKeyboardMarkup(keyboard)
 
-    # 3) Доступ есть (FREE или PAID) → открываем miniapp
-    can_open = a["free"] or a["paid"]
-    if can_open:
+    # если FREE — настоящая кнопка открытия web_app
+    if a.get("is_free") and is_valid_https_url(MINIAPP_URL):
         keyboard.append([InlineKeyboardButton("🚀 Открыть Mini App", web_app=WebAppInfo(url=MINIAPP_URL))])
     else:
+        # иначе кнопка есть, но при нажатии просим купить пакет
         keyboard.append([InlineKeyboardButton("🚀 Открыть Mini App", callback_data="need_pay")])
 
     keyboard.append([InlineKeyboardButton("⭐ Купить пакет", callback_data="buy_pack")])
@@ -110,8 +82,40 @@ def main_menu_for_user(user_id: int) -> InlineKeyboardMarkup:
         InlineKeyboardButton("⚙️ Настройки", callback_data="settings"),
         InlineKeyboardButton("❓ Помощь", callback_data="help"),
     ])
-
     return InlineKeyboardMarkup(keyboard)
+
+
+async def delete_prev_menu(bot, user_id: int):
+    chat_id, msg_id = get_last_menu(user_id)
+    if not chat_id or not msg_id:
+        return
+    try:
+        await bot.delete_message(chat_id=chat_id, message_id=msg_id)
+    except Exception:
+        # если уже удалено/нельзя — просто чистим запись
+        pass
+    clear_last_menu(user_id)
+
+
+async def send_fresh_menu(bot, user_id: int, text: str):
+    # удаляем предыдущее меню
+    await delete_prev_menu(bot, user_id)
+
+    # отправляем новое
+    m = await bot.send_message(
+        chat_id=user_id,
+        text=text,
+        reply_markup=main_menu_for_user(user_id),
+    )
+    set_last_menu(user_id, user_id, m.message_id)
+
+
+async def send_block_notice(bot, user_id: int):
+    # удаляем меню
+    await delete_prev_menu(bot, user_id)
+
+    # просто текст (без меню)
+    await bot.send_message(chat_id=user_id, text="⛔ Доступ заблокирован.")
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -119,10 +123,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user = update.effective_user
     uid = user.id if user else 0
+    if not uid:
+        return
 
-    await update.effective_message.reply_text(
+    # вместо reply_text → делаем “одно меню”
+    await send_fresh_menu(
+        context.bot,
+        uid,
         "🤖 InstaGroq AI\n\nВыбирай действие кнопками ниже 👇",
-        reply_markup=main_menu_for_user(uid),
     )
 
 
@@ -131,22 +139,12 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     data = query.data or ""
 
-    if data == "miniapp_not_set":
-        await query.message.reply_text(
-            "⚠️ MINIAPP_URL не настроен.\n"
-            "Добавь в Railway → Variables: MINIAPP_URL = https://..."
-        )
-        return
-
     if data == "blocked":
-        await query.message.reply_text("⛔ Тебя заблокировали. Напиши администратору.")
+        await query.message.reply_text("⛔ Тебя заблокировали.")
         return
 
     if data == "need_pay":
-        await query.message.reply_text(
-            "⭐ Чтобы открыть Mini App, нужно купить пакет.\n"
-            "Нажми «Купить пакет»."
-        )
+        await query.message.reply_text("⭐ Чтобы открыть Mini App, нужно купить пакет.")
         return
 
     if data == "buy_pack":
@@ -164,5 +162,5 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if data == "help":
-        await query.message.reply_text("❓ Если у тебя есть доступ — кнопка откроет Mini App.")
+        await query.message.reply_text("❓ Нажми «Открыть Mini App».")
         return
