@@ -1,6 +1,6 @@
 import os
-import sqlite3
-from datetime import datetime, timezone
+import json
+from datetime import datetime
 from typing import Any, Dict, Tuple
 
 from flask import Flask, request, jsonify
@@ -12,63 +12,76 @@ from groq_client import ask_groq
 api = Flask(__name__)
 CORS(api)
 
-TARGET_GROUP_ID = int(os.getenv("TARGET_GROUP_ID") or "-4697406654")
+# ✅ Группа для логов (поддерживаем оба названия переменной)
+LOG_GROUP_ID = os.getenv("LOG_GROUP_ID")
+TARGET_GROUP_ID = os.getenv("TARGET_GROUP_ID")
+GROUP_ID_RAW = (LOG_GROUP_ID or TARGET_GROUP_ID or "0").strip()
+
 BOT_TOKEN = (os.getenv("BOT_TOKEN") or "").strip()
 
-DB_PATH = os.getenv("ACCESS_DB_PATH") or "access.db"
+try:
+    GROUP_ID = int(GROUP_ID_RAW)
+except Exception:
+    GROUP_ID = 0
+
+ACCESS_FILE = "access.json"
 
 
-def _now_ts() -> int:
-    return int(datetime.now(timezone.utc).timestamp())
-
-
-def _db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS user_access(
-          user_id INTEGER PRIMARY KEY,
-          free_until INTEGER,
-          blocked_until INTEGER,
-          updated_at INTEGER
-        )
-        """
-    )
-    conn.commit()
-    return conn
-
-
-def _get_access(user_id: int) -> Tuple[bool, bool]:
-    """
-    returns: (is_free, is_blocked)
-    """
-    now = _now_ts()
-    with _db() as conn:
-        row = conn.execute(
-            "SELECT free_until, blocked_until FROM user_access WHERE user_id=?",
-            (user_id,),
-        ).fetchone()
-
-    free_until = row[0] if row else None
-    blocked_until = row[1] if row else None
-
-    is_free = (free_until == -1) or (isinstance(free_until, int) and free_until > now)
-    is_blocked = (blocked_until == -1) or (isinstance(blocked_until, int) and blocked_until > now)
-
-    return is_free, is_blocked
-
-
-def send_log_to_group(text: str) -> None:
-    if not BOT_TOKEN or not TARGET_GROUP_ID:
-        return
+def load_access() -> Dict[str, Any]:
     try:
-        requests.post(
+        with open(ACCESS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f) or {}
+    except Exception:
+        return {}
+
+
+def get_user_access(user_id: int) -> Dict[str, Any]:
+    db = load_access()
+    return db.get(str(user_id), {"paid": False, "free": False, "blocked": False})
+
+
+def has_access(user_id: int) -> bool:
+    if not user_id:
+        return False
+    st = get_user_access(int(user_id))
+    if st.get("blocked"):
+        return False
+    return bool(st.get("paid") or st.get("free"))
+
+
+def send_log_to_group(text: str) -> Tuple[bool, str]:
+    if not BOT_TOKEN:
+        return False, "BOT_TOKEN is empty"
+    if not GROUP_ID:
+        return False, "LOG_GROUP_ID/TARGET_GROUP_ID is empty or invalid"
+
+    if len(text) > 3900:
+        text = text[:3900] + "\n…(truncated)"
+
+    try:
+        r = requests.post(
             f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
-            json={"chat_id": TARGET_GROUP_ID, "text": text},
+            json={"chat_id": GROUP_ID, "text": text},
             timeout=12,
         )
-    except Exception:
-        pass
+        return r.ok, r.text
+    except Exception as e:
+        return False, f"requests error: {e}"
+
+
+def extract_last_user_message(raw: str) -> str:
+    s = (raw or "").strip()
+    if not s:
+        return ""
+    if "Conversation:" in s or "\nUser:" in s or s.startswith("You are "):
+        idx = s.rfind("User:")
+        if idx != -1:
+            s2 = s[idx + len("User:"):].strip()
+            cut = s2.find("\nAssistant:")
+            if cut != -1:
+                s2 = s2[:cut].strip()
+            return s2
+    return s
 
 
 @api.get("/")
@@ -81,58 +94,65 @@ def health():
     return "ok"
 
 
+@api.get("/api/test-log")
+def test_log():
+    time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ok, info = send_log_to_group(f"✅ TEST LOG from Railway\n🕒 {time_str}")
+    return (
+        jsonify(
+            {
+                "ok": ok,
+                "group_id": GROUP_ID,
+                "has_bot_token": bool(BOT_TOKEN),
+                "telegram_response": info,
+            }
+        ),
+        (200 if ok else 500),
+    )
+
+
 @api.post("/api/chat")
 def api_chat():
     data: Dict[str, Any] = request.get_json(silent=True) or {}
 
-    text = (data.get("text") or "").strip()
-    if not text:
+    raw_text = (data.get("text") or "").strip()
+    if not raw_text:
         return jsonify({"error": "empty"}), 400
+
+    text = extract_last_user_message(raw_text)
 
     lang = data.get("lang") or "ru"
     style = data.get("style") or "steps"
     persona = data.get("persona") or "friendly"
 
-    # ✅ принимаем оба формата ключей, чтобы не ломать фронт
-    tg_user_id = data.get("tg_user_id") or data.get("telegram_user_id") or data.get("telegramUserId")
-    tg_username = data.get("tg_username") or data.get("username") or "—"
-    tg_first_name = data.get("tg_first_name") or data.get("first_name") or "—"
-
-    if not tg_user_id:
-        # без user_id нельзя управлять доступом
-        return jsonify({"error": "no_telegram_user"}), 403
-
+    tg_user_id = data.get("tg_user_id") or data.get("telegram_user_id") or 0
     try:
         tg_user_id_int = int(tg_user_id)
     except Exception:
-        return jsonify({"error": "bad_telegram_user"}), 400
+        tg_user_id_int = 0
 
-    is_free, is_blocked = _get_access(tg_user_id_int)
+    tg_username = data.get("tg_username") or data.get("username") or "—"
+    tg_first_name = data.get("tg_first_name") or data.get("first_name") or "—"
 
-    if is_blocked:
-        return jsonify({"error": "blocked"}), 403
+    # 🔐 ДОСТУП: по умолчанию платно
+    if not has_access(tg_user_id_int):
+        return jsonify({"error": "payment_required", "message": "Нужно купить пакет"}), 402
 
-    # ✅ пока оплата не подключена — доступ по умолчанию платный
-    if not is_free:
-        return jsonify({"error": "paid_required"}), 402
-
-    # --- AI ---
     try:
         reply = ask_groq(text, lang=lang, style=style, persona=persona)
     except Exception as e:
         send_log_to_group(f"❌ Ошибка /api/chat: {e}")
         return jsonify({"error": str(e)}), 500
 
-    # --- LOG (одно сообщение: user + ai) ---
     time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_text = (
-        "🧩 Mini App чат\n"
+
+    # ✅ ОДНО сообщение (как ты хочешь): время + пользователь + сообщение + ИИ + ответ
+    send_log_to_group(
         f"🕒 {time_str}\n"
         f"👤 {tg_first_name} (@{tg_username})\n"
-        f"🆔 user_id: {tg_user_id_int}\n\n"
+        f"🆔 {tg_user_id_int}\n"
         f"💬 {text}\n\n"
-        f"🤖 {reply}"
+        f"🤖 ИИ\n{reply}"
     )
-    send_log_to_group(log_text)
 
     return jsonify({"reply": reply})
