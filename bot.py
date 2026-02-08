@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+import requests
 from telegram import (
     Update,
     InlineKeyboardButton,
@@ -20,10 +21,10 @@ from telegram.ext import (
 BOT_TOKEN = (os.getenv("BOT_TOKEN") or "").strip()
 MINIAPP_URL = (os.getenv("MINIAPP_URL") or "").strip()
 
-# ✅ Лог-чат (Railway Variable: LOG_GROUP_ID)
-LOG_GROUP_ID = int(os.getenv("LOG_GROUP_ID") or "0")
+# ✅ В Railway у тебя переменная LOG_GROUP_ID (супергруппа -100...)
+LOG_GROUP_ID = int((os.getenv("LOG_GROUP_ID") or "0").strip())
 
-# ✅ ВАЖНО: username бота (как в @InstaGroqai_bot, без @)
+# ✅ username бота (без @). Можно НЕ задавать, если не нужно для групп.
 BOT_USERNAME = (os.getenv("BOT_USERNAME") or "InstaGroqai_bot").strip()
 
 
@@ -58,13 +59,28 @@ def main_menu() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(keyboard)
 
 
-async def log_to_group(context: ContextTypes.DEFAULT_TYPE, text: str):
-    if not LOG_GROUP_ID:
+def send_log_http(text: str):
+    """
+    Надёжная отправка в группу через Telegram HTTP API.
+    Пишет ошибку в Railway Logs, если что-то не так.
+    """
+    if not BOT_TOKEN:
+        print("LOG ERROR: BOT_TOKEN empty")
         return
+    if not LOG_GROUP_ID:
+        print("LOG ERROR: LOG_GROUP_ID empty/0")
+        return
+
     try:
-        await context.bot.send_message(chat_id=LOG_GROUP_ID, text=text)
-    except Exception:
-        pass
+        r = requests.post(
+            f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+            json={"chat_id": LOG_GROUP_ID, "text": text},
+            timeout=12,
+        )
+        if not r.ok:
+            print("LOG ERROR:", r.status_code, r.text)
+    except Exception as e:
+        print("LOG ERROR: requests exception:", e)
 
 
 def build_start_log(update: Update) -> str:
@@ -78,33 +94,34 @@ def build_start_log(update: Update) -> str:
 
     chat_type = chat.type if chat else "—"
     chat_id = chat.id if chat else "—"
+    text = (msg.text or "").strip() if msg else ""
 
     return (
-        "🚀 /start (group/private)\n"
+        "🚀 /start\n"
         f"🕒 {time_str}\n"
         f"👤 {full_name} (@{username})\n"
         f"🆔 user_id: {user.id if user else '—'}\n"
         f"💬 chat_type: {chat_type}\n"
-        f"🏷 chat_id: {chat_id}"
+        f"🏷 chat_id: {chat_id}\n"
+        f"✉️ text: {text}"
     )
 
 
 # ---------- HANDLERS ----------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # отвечаем
+    # 1) лог в группу
+    send_log_http(build_start_log(update))
+
+    # 2) ответ пользователю
     if update.effective_message:
         await update.effective_message.reply_text(
             "🤖 InstaGroq AI\n\nВыбирай действие кнопками ниже 👇",
             reply_markup=main_menu(),
         )
 
-    # логируем
-    await log_to_group(context, build_start_log(update))
 
-
-# ✅ ЛОВИМ /start В ГРУППЕ КАК ТЕКСТ (включая /start@BotUserName)
+# ✅ на случай групп: /start или /start@BotUserName
 async def start_from_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # просто вызываем общий start
     await start(update, context)
 
 
@@ -147,11 +164,9 @@ def start_bot():
 
     app = Application.builder().token(BOT_TOKEN).build()
 
-    # 1) стандартно: /start
     app.add_handler(CommandHandler("start", start))
 
-    # 2) надежно для групп: ловим текст "/start" и "/start@InstaGroqai_bot"
-    #    (Telegram часто требует @username именно в группе)
+    # групповой вариант
     start_pattern = rf"^/start(@{BOT_USERNAME})?(\s|$)"
     app.add_handler(MessageHandler(filters.Regex(start_pattern), start_from_text))
 
