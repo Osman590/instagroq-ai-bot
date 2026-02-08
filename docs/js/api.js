@@ -25,8 +25,9 @@ function getTelegramUser(){
 
   const u = tg.initDataUnsafe.user;
   return {
-    telegram_user_id: u.id,
-    username: u.username || null,
+    tg_user_id: u.id,
+    tg_username: u.username || null,
+    tg_first_name: u.first_name || null,
   };
 }
 
@@ -39,9 +40,10 @@ export async function askAI(promptText) {
     style: getStyle(),
     persona: getPersona(),
 
-    // ✅ ВАЖНО
-    telegram_user_id: user.telegram_user_id,
-    username: user.username,
+    // ✅ ИМЕННО ТАК ЖДЁТ api.py
+    tg_user_id: user.tg_user_id,
+    tg_username: user.tg_username,
+    tg_first_name: user.tg_first_name,
   };
 
   const r = await fetch(API_CHAT, {
