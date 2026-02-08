@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from groq_client import ask_groq
+from logger import log_chat   # ✅ ДОБАВЛЕНО
 
 # ---------- FLASK API ----------
 api = Flask(__name__)
@@ -29,7 +30,11 @@ def api_chat():
       "text": "...",
       "lang": "ru",
       "style": "steps",
-      "persona": "friendly"
+      "persona": "friendly",
+
+      // (позже)
+      "user_id": 123456789,
+      "username": "nickname"
     }
     """
     data: Dict[str, Any] = request.get_json(silent=True) or {}
@@ -42,6 +47,10 @@ def api_chat():
     style = data.get("style") or "steps"
     persona = data.get("persona") or "friendly"
 
+    # 👇 пока может быть 0 / None — это нормально
+    user_id = int(data.get("user_id") or 0)
+    username = data.get("username")
+
     try:
         reply = ask_groq(
             text,
@@ -51,5 +60,17 @@ def api_chat():
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+    # ✅ ЛОГ В ГРУППУ TELEGRAM
+    try:
+        log_chat(
+            user_id=user_id,
+            username=username,
+            user_text=text,
+            ai_reply=reply,
+        )
+    except Exception:
+        # логирование не должно ломать чат
+        pass
 
     return jsonify({"reply": reply})
