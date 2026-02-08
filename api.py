@@ -129,16 +129,12 @@ def api_chat():
 
     time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # 1) USER (одно сообщение)
+        # ✅ ОДНО сообщение: USER + AI вместе
     send_log_to_group(
         "🕒 " + time_str + "\n"
         f"👤 {tg_first_name} (@{tg_username})\n"
         f"🆔 {tg_user_id}\n"
-        f"💬 {text}"
-    )
-
-    # 2) AI (второе сообщение)
-    send_log_to_group(
+        f"💬 {text}\n\n"
         "🤖 ИИ\n"
         f"{reply}"
     )
