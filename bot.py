@@ -20,15 +20,17 @@ from telegram.ext import (
 BOT_TOKEN = (os.getenv("BOT_TOKEN") or "").strip()
 MINIAPP_URL = (os.getenv("MINIAPP_URL") or "").strip()
 
-# ✅ Лог-чат (как у тебя в Railway: LOG_GROUP_ID)
+# ✅ Лог-чат (Railway Variable: LOG_GROUP_ID)
 LOG_GROUP_ID = int(os.getenv("LOG_GROUP_ID") or "0")
+
+# ✅ ВАЖНО: username бота (как в @InstaGroqai_bot, без @)
+BOT_USERNAME = (os.getenv("BOT_USERNAME") or "InstaGroqai_bot").strip()
 
 
 def is_valid_https_url(url: str) -> bool:
     return url.startswith("https://") and len(url) > len("https://")
 
 
-# ---------- KEYBOARDS ----------
 def main_menu() -> InlineKeyboardMarkup:
     keyboard = []
 
@@ -47,10 +49,7 @@ def main_menu() -> InlineKeyboardMarkup:
             )
         ])
 
-    keyboard.append([
-        InlineKeyboardButton("⭐ Купить пакет", callback_data="buy_pack"),
-    ])
-
+    keyboard.append([InlineKeyboardButton("⭐ Купить пакет", callback_data="buy_pack")])
     keyboard.append([
         InlineKeyboardButton("⚙️ Настройки", callback_data="settings"),
         InlineKeyboardButton("❓ Помощь", callback_data="help"),
@@ -59,45 +58,54 @@ def main_menu() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(keyboard)
 
 
-# ---------- LOG HELPERS ----------
 async def log_to_group(context: ContextTypes.DEFAULT_TYPE, text: str):
     if not LOG_GROUP_ID:
         return
     try:
         await context.bot.send_message(chat_id=LOG_GROUP_ID, text=text)
     except Exception:
-        # чтобы бот не падал из-за логов
         pass
+
+
+def build_start_log(update: Update) -> str:
+    msg = update.effective_message
+    user = update.effective_user
+    chat = update.effective_chat
+
+    time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    username = (user.username or "—") if user else "—"
+    full_name = f"{(user.first_name or '') if user else ''} {(user.last_name or '') if user else ''}".strip() or "—"
+
+    chat_type = chat.type if chat else "—"
+    chat_id = chat.id if chat else "—"
+
+    return (
+        "🚀 /start (group/private)\n"
+        f"🕒 {time_str}\n"
+        f"👤 {full_name} (@{username})\n"
+        f"🆔 user_id: {user.id if user else '—'}\n"
+        f"💬 chat_type: {chat_type}\n"
+        f"🏷 chat_id: {chat_id}"
+    )
 
 
 # ---------- HANDLERS ----------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # ответ пользователю
-    await update.message.reply_text(
-        "🤖 InstaGroq AI\n\nВыбирай действие кнопками ниже 👇",
-        reply_markup=main_menu(),
-    )
+    # отвечаем
+    if update.effective_message:
+        await update.effective_message.reply_text(
+            "🤖 InstaGroq AI\n\nВыбирай действие кнопками ниже 👇",
+            reply_markup=main_menu(),
+        )
 
-    # ✅ лог в группу
-    msg = update.message
-    user = msg.from_user
-    time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # логируем
+    await log_to_group(context, build_start_log(update))
 
-    username = user.username or "—"
-    full_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or "—"
 
-    chat_type = msg.chat.type
-    chat_id = msg.chat.id
-
-    log_text = (
-        "🚀 /start\n"
-        f"🕒 {time_str}\n"
-        f"👤 {full_name} (@{username})\n"
-        f"🆔 user_id: {user.id}\n"
-        f"💬 chat_type: {chat_type}\n"
-        f"🏷 chat_id: {chat_id}"
-    )
-    await log_to_group(context, log_text)
+# ✅ ЛОВИМ /start В ГРУППЕ КАК ТЕКСТ (включая /start@BotUserName)
+async def start_from_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # просто вызываем общий start
+    await start(update, context)
 
 
 async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -124,38 +132,12 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if data == "settings":
-        await query.message.reply_text(
-            "⚙️ Настройки скоро появятся (стиль ИИ, очистка чата и т.д.)."
-        )
+        await query.message.reply_text("⚙️ Настройки скоро появятся.")
         return
 
     if data == "help":
-        await query.message.reply_text(
-            "❓ Нажми «Открыть Mini App» и пиши в чат внутри Mini App."
-        )
+        await query.message.reply_text("❓ Нажми «Открыть Mini App» и пиши в чат внутри Mini App.")
         return
-
-
-# (опционально) лог обычных сообщений, если нужно
-async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = update.message
-    if not msg or not msg.text:
-        return
-
-    user = msg.from_user
-    time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    username = user.username or "—"
-    full_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or "—"
-
-    log_text = (
-        "💬 Сообщение в боте\n"
-        f"🕒 {time_str}\n"
-        f"👤 {full_name} (@{username})\n"
-        f"🆔 user_id: {user.id}\n"
-        f"{msg.text}"
-    )
-    await log_to_group(context, log_text)
 
 
 # ---------- START BOT ----------
@@ -165,9 +147,15 @@ def start_bot():
 
     app = Application.builder().token(BOT_TOKEN).build()
 
+    # 1) стандартно: /start
     app.add_handler(CommandHandler("start", start))
+
+    # 2) надежно для групп: ловим текст "/start" и "/start@InstaGroqai_bot"
+    #    (Telegram часто требует @username именно в группе)
+    start_pattern = rf"^/start(@{BOT_USERNAME})?(\s|$)"
+    app.add_handler(MessageHandler(filters.Regex(start_pattern), start_from_text))
+
     app.add_handler(CallbackQueryHandler(on_button))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_text))
 
     print("🤖 Telegram bot started")
     app.run_polling(stop_signals=None, close_loop=False)
