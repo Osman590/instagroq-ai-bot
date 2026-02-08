@@ -73,7 +73,7 @@ body{
   -webkit-text-size-adjust: 100%;
 }
 
-/* ✅ ФОН БЕЗ ПЯТЕН — ТОЛЬКО РОВНЫЙ ГРАДИЕНТ */
+/* ✅ РОВНЫЙ ФОН (БЕЗ ПЯТЕН), чтобы не было “сверху светло / снизу темно” */
 body::after{
   content:"";
   position: fixed;
@@ -81,24 +81,12 @@ body::after{
   pointer-events: none;
   z-index: 0;
 
-  /* ✅ РОВНЫЙ ФОН ОДНИМ ЦВЕТОМ (как верхняя часть) */
   background: var(--bgTop);
   background-repeat: no-repeat;
+  background-color: var(--bgTop);
 }
 
-  background:
-    linear-gradient(
-      180deg,
-      var(--bgTop) 0%,
-      var(--bgMid) 46%,
-      var(--bgBot) 100%
-    );
-
-  background-repeat: no-repeat;
-  background-color: var(--bgBot);
-}
-
-/* паттерн — ОСТАВЛЕН */
+/* ✅ РИСУНОК/ПАТТЕРН — ОСТАВЛЕН */
 body::before{
   content:"";
   position: fixed;
