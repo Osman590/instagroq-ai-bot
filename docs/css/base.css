@@ -15,6 +15,17 @@
   --accent2:#0a84ff;
 
   --text:#fff;
+
+  /* ✅ ADD: общие переменные UI, чтобы страницы (в т.ч. image) автоматически
+     меняли цвет вместе с темой. НИЧЕГО не ломает, только добавляет. */
+  --glass: rgba(255,255,255,.12);
+  --stroke: rgba(255,255,255,.18);
+
+  /* удобные алиасы для компонентов */
+  --cardBg: var(--glass);
+  --cardStroke: var(--stroke);
+  --previewA: var(--accent1);
+  --previewB: var(--accent2);
 }
 
 /* темы */
@@ -24,6 +35,10 @@
   --bgBot:#04060b;
   --accent1:#6aa7ff;
   --accent2:#2f7bff;
+
+  /* ✅ ADD: слегка подстроим стекло/обводку под тему */
+  --glass: rgba(255,255,255,.10);
+  --stroke: rgba(255,255,255,.16);
 }
 :root[data-theme="purple"]{
   --bgTop:#2d1750;
@@ -31,6 +46,10 @@
   --bgBot:#0a0716;
   --accent1:#b98cff;
   --accent2:#7a5cff;
+
+  /* ✅ ADD */
+  --glass: rgba(255,255,255,.10);
+  --stroke: rgba(255,255,255,.16);
 }
 :root[data-theme="green"]{
   --bgTop:#0b4f41;
@@ -38,6 +57,10 @@
   --bgBot:#061a16;
   --accent1:#2fd6a3;
   --accent2:#11a87b;
+
+  /* ✅ ADD */
+  --glass: rgba(255,255,255,.10);
+  --stroke: rgba(255,255,255,.16);
 }
 :root[data-theme="gray"]{
   --bgTop:#2a3442;
@@ -45,6 +68,10 @@
   --bgBot:#0b1018;
   --accent1:#7fb2ff;
   --accent2:#4b8dff;
+
+  /* ✅ ADD */
+  --glass: rgba(255,255,255,.10);
+  --stroke: rgba(255,255,255,.16);
 }
 
 *{
