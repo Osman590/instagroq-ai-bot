@@ -96,3 +96,23 @@
   border-radius:18px;
   background: rgba(0,0,0,.15);
 }
+/* ===== IMAGE PAGE: свой фон без рисунков ===== */
+html[data-theme] body{
+  /* свой фон (без узоров/кружков) */
+  background: linear-gradient(180deg, #071a33 0%, #041022 100%) !important;
+  background-image: none !important;
+}
+
+/* если в base.css фон рисуется псевдо-элементами — убираем */
+html[data-theme] body::before,
+html[data-theme] body::after{
+  content: none !important;
+  display: none !important;
+}
+
+/* ===== ЭКРАН ГЕНЕРАЦИИ: панель НЕ прозрачная ===== */
+#screenGen .card{
+  background: #0f2746 !important;          /* непрозрачный фон */
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 14px 30px rgba(0,0,0,.35);
+}
