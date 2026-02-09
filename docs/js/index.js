@@ -25,6 +25,7 @@ const STORAGE_THEME = "miniapp_theme_v1";
 
 // ===== DOM =====
 const chatBtn = document.getElementById("chatBtn");
+const imgBtn = document.getElementById("imgBtn"); // ✅ NEW
 const subText = document.getElementById("subText");
 const verText = document.getElementById("verText");
 const langTitle = document.getElementById("langTitle");
@@ -89,6 +90,15 @@ function setChatLink(lang, theme){
   if (!chatBtn) return;
   const baseHref = "./chat.html?v=2";
   chatBtn.href = baseHref
+    + "&lang=" + encodeURIComponent(lang)
+    + "&theme=" + encodeURIComponent(theme);
+}
+
+// ✅ NEW: link to image tab/page
+function setImageLink(lang, theme){
+  if (!imgBtn) return;
+  const baseHref = "./image.html?v=1";
+  imgBtn.href = baseHref
     + "&lang=" + encodeURIComponent(lang)
     + "&theme=" + encodeURIComponent(theme);
 }
@@ -167,6 +177,7 @@ function setLang(lang){
   paintSelectedLang(lang);
 
   setChatLink(lang, getSavedTheme());
+  setImageLink(lang, getSavedTheme()); // ✅ NEW
 }
 
 function setTheme(theme){
@@ -177,6 +188,7 @@ function setTheme(theme){
   setPillLabel(themeBtn, "Цвет: " + themeLabel(theme));
 
   setChatLink(getSavedLang(), theme);
+  setImageLink(getSavedLang(), theme); // ✅ NEW
 }
 
 // ===== overlays =====
