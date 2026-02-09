@@ -1,1 +1,45 @@
- 
+/* docs/css/image.anim.css */
+
+/* ====== page enter/leave (плавно открыть/закрыть вкладку) ====== */
+body.pageEnter{
+  animation: pageIn .38s ease both;
+}
+
+body.pageLeave{
+  animation: pageOut .28s ease both;
+}
+
+@keyframes pageIn{
+  from{ opacity: 0; transform: translateY(12px); }
+  to  { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pageOut{
+  from{ opacity: 1; transform: translateY(0); }
+  to  { opacity: 0; transform: translateY(10px); }
+}
+
+/* ====== screens + плавные переходы ====== */
+.screen{
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity .28s ease, transform .38s ease;
+}
+
+.screenActive{
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.screenLeave{
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+}
+
+/* loader spin */
+@keyframes spin{
+  to { transform: rotate(360deg); }
+}
