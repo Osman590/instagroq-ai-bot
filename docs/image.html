@@ -43,51 +43,68 @@
   <!-- базовая тема/переменные -->
   <link rel="stylesheet" href="./css/index.css?v=3">
   <!-- стили вкладки -->
-  <link rel="stylesheet" href="./css/image.css?v=2">
+  <link rel="stylesheet" href="./css/image.css?v=3">
 </head>
 
 <body>
   <div class="imgTop">
+    <!-- ✅ теперь эта кнопка умеет: внутри вкладки = назад к выбору, если мы на генерации -->
     <a class="imgBack" id="backBtn" href="./index.html">← Назад</a>
-    <div class="imgTitle">🎨 Генерация картинок</div>
+    <div class="imgTitle" id="topTitle">🎨 Генерация картинок</div>
     <div class="imgSpacer"></div>
   </div>
 
   <div class="imgWrap" id="chatZone">
     <div class="imgCard">
-      <div class="imgHint">
-        Выбери картинку из галереи (если нужно) и напиши промпт.
-      </div>
 
-      <!-- Галерея -->
-      <div class="imgRow">
-        <button class="imgBtn2" id="galleryBtn" type="button">🖼️ Галерея</button>
-        <button class="imgBtn" id="genBtn" type="button">Сгенерировать</button>
-      </div>
-
-      <input id="fileInput" type="file" accept="image/*" style="display:none" />
-
-      <!-- Превью + текст -->
-      <div class="imgPromptBox" id="promptBox">
-        <div class="imgPreview" id="previewWrap" hidden>
-          <img id="previewImg" alt="preview" />
-          <button class="imgRemove" id="removeImgBtn" type="button" aria-label="Удалить картинку">✕</button>
+      <!-- ✅ ЭКРАН ВЫБОРА РЕЖИМА -->
+      <div id="modeView">
+        <div class="imgHint">
+          Выбери режим (прокручивается). Потом откроется экран генерации.
         </div>
 
-        <textarea
-          class="imgPrompt"
-          id="prompt"
-          placeholder="Например: кот в космосе, реалистично, 4k"
-        ></textarea>
+        <div class="modeList" id="modeList">
+          <!-- карточки создаёт JS -->
+        </div>
       </div>
 
-      <div class="imgResult" id="result">
-        <div class="imgPlaceholder" id="placeholder">Здесь появится картинка</div>
-        <img class="imgOut" id="outImg" alt="result" hidden />
+      <!-- ✅ ЭКРАН ГЕНЕРАЦИИ -->
+      <div id="genView" hidden>
+        <div class="imgHint" id="modeHint">
+          Выбери картинку из галереи (если нужно) и напиши промпт.
+        </div>
+
+        <!-- Галерея -->
+        <div class="imgRow">
+          <button class="imgBtn2" id="galleryBtn" type="button">🖼️ Галерея</button>
+          <button class="imgBtn" id="genBtn" type="button">Сгенерировать</button>
+        </div>
+
+        <input id="fileInput" type="file" accept="image/*" style="display:none" />
+
+        <!-- Превью + текст -->
+        <div class="imgPromptBox" id="promptBox">
+          <div class="imgPreview" id="previewWrap" hidden>
+            <img id="previewImg" alt="preview" />
+            <button class="imgRemove" id="removeImgBtn" type="button" aria-label="Удалить картинку">✕</button>
+          </div>
+
+          <textarea
+            class="imgPrompt"
+            id="prompt"
+            placeholder="Например: кот в космосе, реалистично, 4k"
+          ></textarea>
+        </div>
+
+        <div class="imgResult" id="result">
+          <div class="imgPlaceholder" id="placeholder">Здесь появится картинка</div>
+          <img class="imgOut" id="outImg" alt="result" hidden />
+        </div>
       </div>
+
     </div>
   </div>
 
-  <script type="module" src="./js/image.js?v=2"></script>
+  <script type="module" src="./js/image.js?v=3"></script>
 </body>
 </html>
