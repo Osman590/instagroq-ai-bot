@@ -63,11 +63,13 @@ def build_start_log(update: Update) -> str:
 
 
 # =========================
-#   UI TEXTS
+#   UI: MENU + TABS
 # =========================
 MENU_TEXT = "🤖 InstaGroq AI\n\nВыбирай действие кнопками ниже 👇"
 
 TAB_TEXT = {
+    "blocked": "⛔ Доступ заблокирован.\n\nЕсли ты считаешь это ошибкой — напиши админу.",
+    "need_pay": "⭐ Чтобы открыть Mini App, нужно купить пакет.\n\nОплату подключим позже.",
     "buy_pack": (
         "⭐ Купить пакет\n\n"
         "Пакеты сообщений (пример):\n"
@@ -76,19 +78,20 @@ TAB_TEXT = {
         "• 2000 сообщений — 999₽\n\n"
         "Оплату подключим позже."
     ),
-    "settings": "⚙️ Настройки\n\nСкоро добавим настройки в боте. Сейчас они есть в Mini App (⚙️ внутри чата).",
-    "help": "❓ Помощь\n\nНажми «Открыть Mini App» и пиши боту внутри приложения.",
-    "need_pay": "⭐ Доступ ограничен\n\nЧтобы открыть Mini App, нужно купить пакет.",
-    "blocked": "⛔ Доступ заблокирован.\n\nЕсли ты считаешь это ошибкой — напиши админу.",
+    "settings": "⚙️ Настройки\n\nСкоро добавим настройки в боте.",
+    "help": "❓ Помощь\n\nНажми «Открыть Mini App».",
+    # дополнительные вкладки-заглушки
+    "profile": "👤 Профиль\n\nРаздел в разработке.",
+    "status": "📌 Статус\n\nРаздел в разработке.",
+    "ref": "🎁 Рефералы\n\nРаздел в разработке.",
+    "support": "💬 Поддержка\n\nРаздел в разработке.",
+    "faq": "📚 FAQ\n\nРаздел в разработке.",
+    "about": "ℹ️ О проекте\n\nРаздел в разработке.",
 }
 
 
-def _btn_back() -> InlineKeyboardButton:
-    return InlineKeyboardButton("⬅️ Назад", callback_data="back_to_menu")
-
-
-def _tab_markup() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup([[_btn_back()]])
+def tab_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Назад", callback_data="back_to_menu")]])
 
 
 def main_menu_for_user(user_id: int) -> InlineKeyboardMarkup:
@@ -96,27 +99,44 @@ def main_menu_for_user(user_id: int) -> InlineKeyboardMarkup:
 
     keyboard = []
 
+    # если заблокирован — показываем вкладку "blocked" (по нажатию откроется вкладка)
     if a.get("is_blocked"):
-        keyboard.append([InlineKeyboardButton("⛔ Доступ заблокирован", callback_data="tab_blocked")])
+        keyboard.append([InlineKeyboardButton("⛔ Доступ заблокирован", callback_data="tab:blocked")])
         return InlineKeyboardMarkup(keyboard)
 
-    # если FREE — настоящая кнопка открытия web_app
+    # открыть miniapp: если free -> web_app, иначе вкладка оплаты
     if a.get("is_free") and is_valid_https_url(MINIAPP_URL):
         keyboard.append([InlineKeyboardButton("🚀 Открыть Mini App", web_app=WebAppInfo(url=MINIAPP_URL))])
     else:
-        # иначе открываем вкладку оплаты
-        keyboard.append([InlineKeyboardButton("🚀 Открыть Mini App", callback_data="tab_need_pay")])
+        keyboard.append([InlineKeyboardButton("🚀 Открыть Mini App", callback_data="tab:need_pay")])
 
-    # вкладки (пока заглушки/тексты)
-    keyboard.append([InlineKeyboardButton("⭐ Купить пакет", callback_data="tab_buy_pack")])
+    # основные вкладки
+    keyboard.append([InlineKeyboardButton("⭐ Купить пакет", callback_data="tab:buy_pack")])
     keyboard.append([
-        InlineKeyboardButton("⚙️ Настройки", callback_data="tab_settings"),
-        InlineKeyboardButton("❓ Помощь", callback_data="tab_help"),
+        InlineKeyboardButton("⚙️ Настройки", callback_data="tab:settings"),
+        InlineKeyboardButton("❓ Помощь", callback_data="tab:help"),
+    ])
+
+    # дополнительные вкладки (заглушки)
+    keyboard.append([
+        InlineKeyboardButton("👤 Профиль", callback_data="tab:profile"),
+        InlineKeyboardButton("📌 Статус", callback_data="tab:status"),
+    ])
+    keyboard.append([
+        InlineKeyboardButton("🎁 Рефералы", callback_data="tab:ref"),
+        InlineKeyboardButton("💬 Поддержка", callback_data="tab:support"),
+    ])
+    keyboard.append([
+        InlineKeyboardButton("📚 FAQ", callback_data="tab:faq"),
+        InlineKeyboardButton("ℹ️ О проекте", callback_data="tab:about"),
     ])
 
     return InlineKeyboardMarkup(keyboard)
 
 
+# =========================
+#   MENU MESSAGE MANAGEMENT
+# =========================
 async def delete_prev_menu(bot, user_id: int):
     chat_id, msg_id = get_last_menu(user_id)
     if not chat_id or not msg_id:
@@ -132,7 +152,7 @@ async def send_fresh_menu(bot, user_id: int, text: str):
     # удаляем предыдущее меню
     await delete_prev_menu(bot, user_id)
 
-    # отправляем новое меню
+    # отправляем новое
     m = await bot.send_message(
         chat_id=user_id,
         text=text,
@@ -141,7 +161,15 @@ async def send_fresh_menu(bot, user_id: int, text: str):
     set_last_menu(user_id, user_id, m.message_id)
 
 
-async def _edit_to_menu(context: ContextTypes.DEFAULT_TYPE, query, user_id: int):
+async def send_block_notice(bot, user_id: int):
+    # удаляем меню
+    await delete_prev_menu(bot, user_id)
+
+    # просто текст (без меню)
+    await bot.send_message(chat_id=user_id, text="⛔ Доступ заблокирован.")
+
+
+async def edit_to_menu(context: ContextTypes.DEFAULT_TYPE, query, user_id: int):
     try:
         await query.message.edit_text(MENU_TEXT, reply_markup=main_menu_for_user(user_id))
         set_last_menu(user_id, user_id, query.message.message_id)
@@ -149,15 +177,18 @@ async def _edit_to_menu(context: ContextTypes.DEFAULT_TYPE, query, user_id: int)
         await send_fresh_menu(context.bot, user_id, MENU_TEXT)
 
 
-async def _edit_to_tab(context: ContextTypes.DEFAULT_TYPE, query, user_id: int, tab_key: str):
+async def edit_to_tab(context: ContextTypes.DEFAULT_TYPE, query, user_id: int, tab_key: str):
     text = TAB_TEXT.get(tab_key, "Раздел в разработке.")
     try:
-        await query.message.edit_text(text, reply_markup=_tab_markup())
+        await query.message.edit_text(text, reply_markup=tab_kb())
         set_last_menu(user_id, user_id, query.message.message_id)
     except Exception:
         await send_fresh_menu(context.bot, user_id, MENU_TEXT)
 
 
+# =========================
+#   HANDLERS
+# =========================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     send_log_http(build_start_log(update))
 
@@ -173,7 +204,7 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     data = (query.data or "").strip()
 
-    # отвечаем на callback, но не шлём сообщений
+    # обязательно отвечаем на callback, но НЕ шлём сообщений
     try:
         await query.answer()
     except Exception:
@@ -184,31 +215,16 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not uid:
         return
 
-    # --- BACK ---
+    # назад в меню
     if data == "back_to_menu":
-        await _edit_to_menu(context, query, uid)
+        await edit_to_menu(context, query, uid)
         return
 
-    # --- TABS ---
-    if data == "tab_buy_pack":
-        await _edit_to_tab(context, query, uid, "buy_pack")
+    # вкладки: tab:<key>
+    if data.startswith("tab:"):
+        key = data.split("tab:", 1)[1].strip()
+        await edit_to_tab(context, query, uid, key)
         return
 
-    if data == "tab_settings":
-        await _edit_to_tab(context, query, uid, "settings")
-        return
-
-    if data == "tab_help":
-        await _edit_to_tab(context, query, uid, "help")
-        return
-
-    if data == "tab_need_pay":
-        await _edit_to_tab(context, query, uid, "need_pay")
-        return
-
-    if data == "tab_blocked":
-        await _edit_to_tab(context, query, uid, "blocked")
-        return
-
-    # неизвестная кнопка — возвращаем меню
-    await _edit_to_menu(context, query, uid)
+    # если пришло что-то неизвестное — просто вернём меню
+    await edit_to_menu(context, query, uid)
