@@ -1,4 +1,4 @@
-/* docs/css/index.css */
+Index.css: /* docs/css/index.css */
 
 :root{
   --vh: 100vh;
@@ -80,12 +80,11 @@ body{
 
   /* ✅ фон теперь реально зависит от темы через --glow/--glow2/--glow3 */
   background:
-  linear-gradient(
-    180deg,
-    var(--bgTop) 0%,
-    var(--bgMid) 55%,
-    var(--bgBot) 100%
-  );
+    radial-gradient(900px 650px at 20% 18%, var(--glow) 0%, transparent 60%),
+    radial-gradient(1100px 800px at 80% 70%, var(--glow2) 0%, transparent 58%),
+    radial-gradient(520px 420px at 55% 35%, var(--glow3) 0%, transparent 65%),
+    linear-gradient(180deg, var(--bgTop) 0%, var(--bgMid) 50%, var(--bgBot) 100%);
+}
 
 /* ✅ стеклянные квадраты */
 .cube{
