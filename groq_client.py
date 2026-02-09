@@ -1,9 +1,13 @@
 import os
 from typing import Optional
 
+from groq import Groq
+
 # ---------- ENV ----------
 GROQ_API_KEY = (os.getenv("GROQ_API_KEY") or "").strip()
 GROQ_MODEL = (os.getenv("GROQ_MODEL") or "llama-3.1-8b-instant").strip()
+
+groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
 
 # ---------- Language / Style / Persona ----------
@@ -62,18 +66,6 @@ def build_system_prompt(lang: str, style: str, persona: str) -> str:
     )
 
 
-def _get_groq_client():
-    if not GROQ_API_KEY:
-        raise RuntimeError("GROQ_API_KEY is not set")
-
-    try:
-        from groq import Groq
-    except Exception as e:
-        raise RuntimeError(f"Groq SDK is not available: {e}")
-
-    return Groq(api_key=GROQ_API_KEY)
-
-
 # ---------- MAIN AI FUNCTION ----------
 def ask_groq(
     user_text: str,
@@ -82,11 +74,13 @@ def ask_groq(
     style: str = "steps",
     persona: str = "friendly",
 ) -> str:
-    client = _get_groq_client()
+    if not groq_client:
+        raise RuntimeError("GROQ_API_KEY is not set")
+
     system_prompt = build_system_prompt(lang, style, persona)
 
     try:
-        resp = client.chat.completions.create(
+        resp = groq_client.chat.completions.create(
             model=GROQ_MODEL,
             messages=[
                 {"role": "system", "content": system_prompt},
@@ -99,7 +93,8 @@ def ask_groq(
             max_tokens=600,
         )
     except TypeError:
-        resp = client.chat.completions.create(
+        # fallback for older SDK
+        resp = groq_client.chat.completions.create(
             model=GROQ_MODEL,
             messages=[
                 {"role": "system", "content": system_prompt},
