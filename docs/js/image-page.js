@@ -1,48 +1,36 @@
-import { fakeGenerate } from "./image-api.js";
+import {generateImage} from "./image-api.js";
+import {setMode, setFile, needImage} from "./image.js";
 
-const screens = {
-  cards: document.getElementById("cardsScreen"),
-  form: document.getElementById("formScreen"),
-  loading: document.getElementById("loadingScreen"),
-  result: document.getElementById("resultScreen"),
+const screens={
+  cards:cards,
+  form:form,
+  loading:loading,
+  result:result
 };
 
-const galleryBtn = document.getElementById("galleryBtn");
-const fileInput = document.getElementById("fileInput");
-const generateBtn = document.getElementById("generateBtn");
-const backBtn = document.getElementById("backBtn");
-const closeResult = document.getElementById("closeResult");
-const repeatBtn = document.getElementById("repeatBtn");
-const resultImage = document.getElementById("resultImage");
-const downloadBtn = document.getElementById("downloadBtn");
-
-let currentMode = null;
-let lastPayload = null;
-
-function show(name){
+function show(n){
   Object.values(screens).forEach(s=>s.classList.remove("active"));
-  screens[name].classList.add("active");
+  screens[n].classList.add("active");
 }
 
-document.querySelectorAll(".card").forEach(card=>{
-  card.onclick = () => {
-    currentMode = card.dataset.mode;
-    galleryBtn.classList.toggle("hidden", currentMode === "text");
+document.querySelectorAll(".card").forEach(c=>{
+  c.onclick=()=>{
+    setMode(c.dataset.mode);
+    gallery.classList.toggle("hidden",!needImage());
     show("form");
   };
 });
 
-backBtn.onclick = () => show("cards");
+back.onclick=()=>show("cards");
+gallery.onclick=()=>file.click();
+file.onchange=e=>setFile(e.target.files[0]);
 
-generateBtn.onclick = async () => {
+generate.onclick=async()=>{
   show("loading");
-  lastPayload = {};
-  const img = await fakeGenerate();
-  resultImage.src = img;
-  downloadBtn.href = img;
+  const img=await generateImage();
+  resultImg.src=img;
   show("result");
 };
 
-repeatBtn.onclick = generateBtn.onclick;
-
-closeResult.onclick = () => show("form");
+repeat.onclick=generate.onclick;
+close.onclick=()=>show("form");
