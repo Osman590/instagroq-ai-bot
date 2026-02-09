@@ -1,5 +1,4 @@
 import { tg } from "./telegram.js";
-import { clearAIMemory } from "./api.js";
 
 export function initSettingsUI({ controller }) {
   const overlay = document.getElementById("overlay");
@@ -35,8 +34,6 @@ export function initSettingsUI({ controller }) {
   clearBtn.addEventListener("click", async () => {
     const ok = await controller.confirmClear();
     if (!ok) return;
-
-    try { await clearAIMemory(); } catch(e) {}
 
     controller.clearHistory();
     overlay.style.display = "none";
