@@ -7,6 +7,25 @@
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
+  <!-- ✅ ТЕМА: применяем сразу (без мигания) -->
+  <script>
+    (function(){
+      const KEY = "miniapp_theme_v1";
+
+      function getTheme(){
+        const url = new URL(window.location.href);
+        const qp = url.searchParams.get("theme");
+        if (qp) return qp;
+        try { return localStorage.getItem(KEY) || "blue"; }
+        catch(e) { return "blue"; }
+      }
+
+      const theme = getTheme();
+      document.documentElement.setAttribute("data-theme", theme);
+      try { localStorage.setItem(KEY, theme); } catch(e) {}
+    })();
+  </script>
+
   <link rel="stylesheet" href="./css/base.css">
   <link rel="stylesheet" href="./css/panels.css">
   <link rel="stylesheet" href="./css/image-ui.css">
