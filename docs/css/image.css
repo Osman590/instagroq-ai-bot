@@ -298,3 +298,13 @@ textarea, input, button { font-size: 16px; }
   color: #fff;
   background: linear-gradient(180deg, var(--accent1) 0%, var(--accent2) 100%);
 }
+/* docs/css/image.css */
+
+/* ===== MODE LIST ===== */
+.modeDesc{
+  display: block;
+  margin-top: 6px;
+  color: rgba(255,255,255,.70);
+  font-size: 13px;
+  line-height: 1.35;
+}
