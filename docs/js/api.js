@@ -2,6 +2,7 @@
 
 const API_BASE = "https://instagroq-ai-bot-production.up.railway.app";
 const API_CHAT = API_BASE + "/api/chat";
+const API_CLEAR_MEMORY = API_BASE + "/api/memory/clear";
 
 function getLang(){
   return localStorage.getItem("miniapp_lang_v1") || "ru";
@@ -55,4 +56,17 @@ export async function askAI(promptText) {
 
   const data = await r.json();
   return (data.reply || "").trim();
+}
+
+// ✅ очистка памяти ИИ на сервере
+export async function clearAIMemory() {
+  const user = getTelegramUser();
+
+  const r = await fetch(API_CLEAR_MEMORY, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tg_user_id: user.tg_user_id }),
+  });
+
+  return r.ok;
 }
