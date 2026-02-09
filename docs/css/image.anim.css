@@ -1,45 +1,34 @@
 /* docs/css/image.anim.css */
 
-/* ====== page enter/leave (плавно открыть/закрыть вкладку) ====== */
-body.pageEnter{
-  animation: pageIn .38s ease both;
-}
+/* фикс: чтобы iOS не зумил при фокусе */
+textarea, input, button { font-size: 16px; }
 
-body.pageLeave{
-  animation: pageOut .28s ease both;
+/* page in/out */
+body.pageIn{
+  animation: pageIn .28s ease both;
 }
-
+body.pageOut{
+  animation: pageOut .26s ease both;
+}
 @keyframes pageIn{
-  from{ opacity: 0; transform: translateY(12px); }
-  to  { opacity: 1; transform: translateY(0); }
+  from{ opacity:0; transform: translateY(10px); }
+  to{ opacity:1; transform: translateY(0); }
 }
-
 @keyframes pageOut{
-  from{ opacity: 1; transform: translateY(0); }
-  to  { opacity: 0; transform: translateY(10px); }
+  from{ opacity:1; transform: translateY(0); }
+  to{ opacity:0; transform: translateY(10px); }
 }
 
-/* ====== screens + плавные переходы ====== */
-.screen{
-  opacity: 0;
-  transform: translateY(10px);
-  pointer-events: none;
-  transition: opacity .28s ease, transform .38s ease;
+/* мягкая смена экранов внутри страницы */
+body.fadeSwap .imgCard{
+  animation: fadeSwap .22s ease both;
 }
-
-.screenActive{
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-.screenLeave{
-  opacity: 0;
-  transform: translateY(12px);
-  pointer-events: none;
+@keyframes fadeSwap{
+  from{ opacity:1; transform: translateY(0); }
+  to{ opacity:.2; transform: translateY(8px); }
 }
 
 /* loader spin */
 @keyframes spin{
-  to { transform: rotate(360deg); }
+  to{ transform: rotate(360deg); }
 }
