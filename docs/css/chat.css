@@ -1,171 +1,369 @@
-.chat{
-  flex:1 1 auto;
-  padding:16px;
+/* docs/css/image.css */
 
-  /* чтобы чат не прятался под fixed-top */
-  padding-top: calc(60px + env(safe-area-inset-top));
+/* фикс: чтобы iOS не зумил при фокусе */
+textarea, input, button { font-size: 16px; }
+button { -webkit-tap-highlight-color: transparent; }
 
-  overflow-y:auto;
-  -webkit-overflow-scrolling: touch;
+/* верхняя панель */
+.imgTop{
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 20;
   display:flex;
-  flex-direction:column;
-  gap:12px;
-  min-height:0;
-  touch-action: manipulation;
+  align-items:center;
+  gap:10px;
+  padding: 10px 14px;
+  padding-top: calc(10px + env(safe-area-inset-top));
+  background: rgba(8,16,30,.55);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid rgba(255,255,255,.08);
 }
 
-/* ============================= */
-/* ✅ ПЛАВНОЕ ПОЯВЛЕНИЕ СООБЩЕНИЙ */
-/* ============================= */
+.imgBack{
+  color: rgba(210,230,255,.95);
+  text-decoration: none;
+  font-weight: 900;
+}
 
-/* пузыри iPhone vibe */
-.msg{
-  max-width:78%;
-  padding:12px 14px;
-  border-radius:18px;
-  line-height:1.35;
-  font-size:15px;
-  font-weight: 580;
-  white-space:pre-wrap;
-  word-break:break-word;
-  box-shadow: 0 10px 26px rgba(0,0,0,.18);
+.imgTitle{ font-weight: 900; font-size: 16px; }
+.imgSpacer{ flex:1; }
 
-  /* ✅ анимация появления */
+/* зона контента */
+.imgWrap{
+  height: var(--vh);
+  padding-top: calc(64px + env(safe-area-inset-top));
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* карточка-контейнер */
+.imgCard{
+  width: min(560px, 92vw);
+  margin: 0 auto;
+  background: rgba(20,30,45,.35);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 18px;
+  padding: 14px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.imgShell{
+  position: relative;
+  overflow: hidden;
+}
+
+/* ====== screens + плавные переходы ====== */
+.screen{
   opacity: 0;
-  transform: translateY(6px) scale(0.98);
-  animation: msgIn 0.38s ease-out forwards;
-  will-change: transform, opacity;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity .28s ease, transform .42s ease;
 }
 
-/* ✅ чуть медленнее для длинных сообщений (выглядит плавнее) */
-.msg.bot{ animation-duration: 0.42s; }
-.msg.user{ animation-duration: 0.36s; }
-
-@keyframes msgIn{
-  to{
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+.screenActive{
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
-/* bot: стеклянный */
-.bot{
-  align-self:flex-start;
-  background: rgba(255,255,255,.16);
-  border: 1px solid rgba(255,255,255,.18);
+.screenLeave{
+  opacity: 0;
+  transform: translateY(14px);
+  pointer-events: none;
+}
+
+.screenHead{ margin-bottom: 12px; }
+.screenKicker{
+  font-weight: 900;
+  font-size: 14px;
+  color: rgba(255,255,255,.92);
+}
+.screenSub{
+  margin-top: 6px;
+  font-size: 13px;
+  color: rgba(255,255,255,.72);
+  line-height: 1.35;
+}
+
+/* ====== список режимов ====== */
+.modeList{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modeCard{
+  width: 100%;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 18px;
+  padding: 0;
+  text-align: left;
+  background: rgba(255,255,255,.06);
+  overflow: hidden;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* user: ✅ по теме (не фикс-синий) */
-.user{
-  align-self:flex-end;
- background: rgba(255,255,255,.12);
-border: 1px solid rgba(255,255,255,.16);
-backdrop-filter: blur(12px);
--webkit-backdrop-filter: blur(12px);
-
-box-shadow: 0 2px 6px rgba(0,0,0,.25);
+.modeMedia{
+  position: relative;
+  height: 172px;
+  background-size: cover;
+  background-position: center;
 }
 
-/* ============================= */
-/* ✅ typing bubble (iOS style) */
-/* ============================= */
+.modeOverlay{
+  position:absolute;
+  inset:0;
+  background: linear-gradient(180deg, rgba(0,0,0,.06) 0%, rgba(0,0,0,.55) 100%);
+}
 
-.msg.bot.typing{
-  align-self: flex-start;
-  margin-bottom: 6px;
-  transform: translateY(-4px);
+.modePrice{
+  position:absolute;
+  left: 12px;
+  top: 12px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(0,0,0,.28);
+  color: rgba(255,255,255,.95);
+  font-weight: 900;
+}
 
-  padding: 6px 10px;
-  max-width: 64px;
+.modeBody{ padding: 12px 14px 14px; }
 
-  background: rgba(255,255,255,.12);
-  border: 1px solid rgba(255,255,255,.18);
+.modeTitle{
+  font-weight: 900;
+  font-size: 18px;
+  color: rgba(255,255,255,.95);
+}
 
+.modeSub{
+  margin-top: 6px;
+  font-size: 13px;
+  color: rgba(255,255,255,.70);
+  line-height: 1.35;
+}
+
+.modeOpen{
+  margin-top: 10px;
+  font-weight: 900;
+  color: rgba(255,255,255,.88);
+}
+
+/* ====== экран генерации ====== */
+.genHeader{
   border-radius: 16px;
-
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-
-  box-shadow: 0 8px 18px rgba(0,0,0,.18);
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  opacity: 1;
-  animation: none;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  padding: 12px;
+  margin-bottom: 12px;
 }
 
-/* контейнер точек */
-.typing-dots{
-  display: inline-flex;
-  align-items: center;
+.genTitleRow{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.genTitle{
+  font-weight: 900;
+  font-size: 16px;
+  color: rgba(255,255,255,.95);
+}
+
+.genChange{
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  font-weight: 900;
+  color: rgba(255,255,255,.92);
+  background: rgba(255,255,255,.10);
+}
+
+.genBadges{
+  margin-top: 10px;
+  display:flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
-/* точки */
-.typing .dot{
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(255,255,255,.85);
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,.25) inset,
-    0 8px 18px rgba(0,0,0,.18);
-
-  opacity: .45;
-  transform: translateY(0);
-  animation: typingPulse 1.1s infinite ease-in-out;
+.badge{
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.22);
+  color: rgba(255,255,255,.92);
+  font-weight: 900;
+  font-size: 12px;
 }
 
-.typing .dot:nth-child(2){ animation-delay: .15s; }
-.typing .dot:nth-child(3){ animation-delay: .30s; }
-
-@keyframes typingPulse{
-  0%, 100% {
-    opacity: .40;
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    opacity: .95;
-    transform: translateY(-2px) scale(1.15);
-  }
+.badgeModel{
+  font-weight: 800;
+  color: rgba(255,255,255,.85);
 }
 
-/* ================================================= */
-/* ✅ BLACK THEME — тёмно-синие пузыри и кнопка send */
-/* ================================================= */
-
-:root[data-theme="black"] .msg.user{
-  background: linear-gradient(
-    180deg,
-    #1b2f55 0%,
-    #0f1f3d 100%
-  );
-  border: 1px solid rgba(120,160,255,.25);
-  box-shadow:
-    0 10px 26px rgba(0,0,0,.55),
-    0 0 18px rgba(80,120,255,.18);
+.genDesc{
+  margin-top: 10px;
+  font-size: 13px;
+  color: rgba(255,255,255,.72);
+  line-height: 1.35;
 }
 
-/* кнопка отправки */
-:root[data-theme="black"] #sendBtn{
-  background: linear-gradient(
-    180deg,
-    #1e3a6a 0%,
-    #102446 100%
-  );
-  border: 1px solid rgba(120,160,255,.35);
-  box-shadow:
-    0 6px 18px rgba(0,0,0,.45),
-    0 0 14px rgba(90,140,255,.25);
+/* кнопки */
+.imgRow{
+  display:flex;
+  gap:10px;
+  margin-bottom: 10px;
 }
 
-/* иконка внутри кнопки (если SVG / текст) */
-:root[data-theme="black"] #sendBtn,
-:root[data-theme="black"] #sendBtn svg{
-  color: #e6efff;
-  fill: #e6efff;
+/* если только одна кнопка — центрируем */
+.imgRow.centerOnly{
+  justify-content: center;
 }
+.imgRow.centerOnly .imgBtn{
+  flex: 0 0 auto;
+  min-width: 76%;
+}
+
+.imgBtn2{
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  font-weight: 900;
+  color: rgba(255,255,255,.92);
+  background: rgba(255,255,255,.10);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.imgBtn{
+  flex: 1.2;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(180deg, var(--accent1) 0%, var(--accent2) 100%);
+}
+
+/* коробка ввода: превью сверху, текст снизу */
+.imgPromptBox{
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.10);
+  overflow: hidden;
+}
+
+.imgPromptBox.noPreview{
+  /* когда нет галереи — не оставляем лишнего “пустого” места */
+}
+
+.imgPreview{
+  position: relative;
+  padding: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
+}
+
+.imgPreview img{
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.14);
+}
+
+.imgRemove{
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.25);
+  color: rgba(255,255,255,.95);
+  font-weight: 900;
+}
+
+.imgPrompt{
+  width: 100%;
+  min-height: 120px;
+  resize: none;
+  border: 0;
+  padding: 12px;
+  background: transparent;
+  color: rgba(255,255,255,.92);
+  outline: none;
+}
+
+/* блок результата */
+.imgResult{
+  margin-top: 12px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.18);
+  min-height: 260px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position: relative;
+}
+
+.imgPlaceholder{
+  color: rgba(255,255,255,.65);
+  font-size: 13px;
+  padding: 18px;
+  text-align: center;
+  line-height: 1.35;
+}
+
+.imgOut{
+  width: 100%;
+  height: auto;
+  display:block;
+}
+
+/* loader */
+.loadBox{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  justify-content:center;
+  gap: 12px;
+  background: radial-gradient(420px 280px at 50% 40%, rgba(255,255,255,.06) 0%, rgba(0,0,0,.22) 60%, rgba(0,0,0,.30) 100%);
+}
+
+.spinner{
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 4px solid rgba(255,255,255,.20);
+  border-top-color: rgba(255,255,255,.85);
+  animation: spin 1s linear infinite;
+}
+
+.loadText{
+  font-weight: 900;
+  color: rgba(255,255,255,.86);
+}
+
+@keyframes spin{ to { transform: rotate(360deg); } }
+
+/* кнопка снизу после результата */
+.bottomRow{
+  margin-top: 12px;
+  display:flex;
+}
+.bottomBtn{ width: 100%; }
