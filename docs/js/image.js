@@ -1,29 +1,41 @@
-// docs/js/image.js
-
 export const MODES = [
   {
-    id: "style",
+    id: "txt2img",
+    title: "Генерация",
+    desc: "Создание изображения по тексту",
+    price: 4,
+    image: "./assets/modes/txt2img.jpg",
+  },
+  {
+    id: "img2img",
     title: "Смена стиля",
-    desc: "Изменить художественный стиль изображения",
+    desc: "Изменение стиля изображения",
+    price: 4,
+    image: "./assets/modes/style.jpg",
   },
   {
-    id: "enhance",
-    title: "Улучшение",
-    desc: "Повысить качество и детализацию",
+    id: "remove_bg",
+    title: "Удалить фон",
+    desc: "Автоматическое удаление фона",
+    price: 6,
+    image: "./assets/modes/remove-bg.jpg",
   },
   {
-    id: "anime",
-    title: "Аниме",
-    desc: "Преобразовать изображение в аниме-стиль",
+    id: "inpaint",
+    title: "Удалить объект",
+    desc: "Стереть объект на изображении",
+    price: 6,
+    image: "./assets/modes/inpaint.jpg",
   },
   {
-    id: "realistic",
-    title: "Реализм",
-    desc: "Сделать изображение более реалистичным",
+    id: "upscale",
+    title: "Улучшить качество",
+    desc: "Повысить разрешение изображения",
+    price: 3,
+    image: "./assets/modes/upscale.jpg",
   },
 ];
 
-// состояние
 let currentMode = null;
 let selectedFile = null;
 
@@ -31,8 +43,8 @@ export function getModes() {
   return MODES;
 }
 
-export function setMode(modeId) {
-  currentMode = MODES.find(m => m.id === modeId) || null;
+export function setMode(id) {
+  currentMode = MODES.find(m => m.id === id) || null;
 }
 
 export function getMode() {
@@ -40,7 +52,7 @@ export function getMode() {
 }
 
 export function setFile(file) {
-  selectedFile = file || null;
+  selectedFile = file;
 }
 
 export function getFile() {
