@@ -1,7 +1,5 @@
 // docs/js/image.vh.js
-export function initVH() {
-  const tg = window.Telegram?.WebApp;
-
+export function initVH(tg){
   function applyVH(){
     if (tg && typeof tg.viewportHeight === "number") {
       document.documentElement.style.setProperty("--vh", tg.viewportHeight + "px");
