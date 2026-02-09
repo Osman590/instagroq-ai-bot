@@ -71,7 +71,8 @@
 
 /* цена внизу слева */
 .modePrice{
-  margin-top:auto;
+  margin-top:12px;      /* ⬅️ контролирует высоту зоны */
+  padding-bottom:6px;   /* ⬅️ убираем лишнюю пустоту */
   font-weight:900;
   font-size:18px;
   color:#ffd966;
