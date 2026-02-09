@@ -1,1 +1,89 @@
- 
+<!-- docs/image.html -->
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Image</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- ✅ ТЕМА: применяем сразу (без мигания) -->
+  <script>
+    (function(){
+      const KEY = "miniapp_theme_v1";
+      function getTheme(){
+        const url = new URL(window.location.href);
+        const qp = url.searchParams.get("theme");
+        if (qp) return qp;
+        try{ return localStorage.getItem(KEY) || "blue"; }catch(e){ return "blue"; }
+      }
+      const theme = getTheme();
+      document.documentElement.setAttribute("data-theme", theme);
+      try{ localStorage.setItem(KEY, theme); }catch(e){}
+    })();
+  </script>
+
+  <link rel="stylesheet" href="./css/base.css?v=3">
+  <link rel="stylesheet" href="./css/panels.css?v=3">
+  <link rel="stylesheet" href="./css/image-ui.css?v=1">
+  <link rel="stylesheet" href="./css/image.css?v=1">
+</head>
+
+<body>
+  <div class="top">
+    <a id="backBtn" href="./index.html">←</a>
+    <div class="title" id="titleText">Генерация</div>
+    <div class="spacer"></div>
+  </div>
+
+  <main class="wrap">
+    <!-- SCREEN 1: выбор режима/стиля -->
+    <section class="screen active" id="screenPick">
+      <div class="pickTitle" id="pickTitle">Выберите стиль</div>
+      <div class="list" id="modeList"></div>
+    </section>
+
+    <!-- SCREEN 2: генерация -->
+    <section class="screen" id="screenGen">
+      <div class="card">
+        <div class="rowHead">
+          <div class="modeName" id="modeName">—</div>
+          <button class="pill" id="changeModeBtn" type="button">Сменить</button>
+        </div>
+
+        <!-- галерея -->
+        <div class="gallery">
+          <input id="fileInput" type="file" accept="image/*" hidden />
+          <button class="pill" id="pickFileBtn" type="button">Выбрать фото</button>
+
+          <div class="previewWrap hidden" id="previewWrap">
+            <img id="previewImg" alt="preview" />
+            <button class="pill danger" id="removeImgBtn" type="button">Удалить</button>
+          </div>
+        </div>
+
+        <!-- промпт -->
+        <div class="promptBox">
+          <textarea id="prompt"
+            placeholder="Опиши, что сделать со стилем / как изменить картинку…"
+            rows="4"></textarea>
+
+          <button class="btn" id="genBtn" type="button">Сгенерировать</button>
+        </div>
+
+        <!-- результат -->
+        <div class="result">
+          <div class="loading hidden" id="loading">⏳ Генерация…</div>
+          <div class="out hidden" id="out">
+            <img id="resultImg" alt="result" />
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ЛОГИКА -->
+  <script type="module" src="./js/image-page.js?v=1"></script>
+</body>
+</html>
