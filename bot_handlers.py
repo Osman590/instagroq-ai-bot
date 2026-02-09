@@ -80,7 +80,6 @@ TAB_TEXT = {
     "help": "❓ Помощь\n\nНажми «Открыть Mini App» и пиши боту внутри приложения.",
     "need_pay": "⭐ Доступ ограничен\n\nЧтобы открыть Mini App, нужно купить пакет.",
     "blocked": "⛔ Доступ заблокирован.\n\nЕсли ты считаешь это ошибкой — напиши админу.",
-    # сюда потом добавим новые вкладки
 }
 
 
@@ -115,9 +114,6 @@ def main_menu_for_user(user_id: int) -> InlineKeyboardMarkup:
         InlineKeyboardButton("❓ Помощь", callback_data="tab_help"),
     ])
 
-    # сюда можешь добавлять новые вкладки:
-    # keyboard.append([InlineKeyboardButton("🧾 Профиль", callback_data="tab_profile")])
-
     return InlineKeyboardMarkup(keyboard)
 
 
@@ -145,26 +141,21 @@ async def send_fresh_menu(bot, user_id: int, text: str):
     set_last_menu(user_id, user_id, m.message_id)
 
 
-async def _edit_to_menu(query, user_id: int):
-    # возвращаем меню через редактирование текущего сообщения
+async def _edit_to_menu(context: ContextTypes.DEFAULT_TYPE, query, user_id: int):
     try:
         await query.message.edit_text(MENU_TEXT, reply_markup=main_menu_for_user(user_id))
-        # запоминаем что текущее сообщение — это “главное”
         set_last_menu(user_id, user_id, query.message.message_id)
     except Exception:
-        # если нельзя редактировать (редко) — просто шлём новое меню
-        await send_fresh_menu(query.get_bot(), user_id, MENU_TEXT)
+        await send_fresh_menu(context.bot, user_id, MENU_TEXT)
 
 
-async def _edit_to_tab(query, user_id: int, tab_key: str):
+async def _edit_to_tab(context: ContextTypes.DEFAULT_TYPE, query, user_id: int, tab_key: str):
     text = TAB_TEXT.get(tab_key, "Раздел в разработке.")
     try:
         await query.message.edit_text(text, reply_markup=_tab_markup())
-        # это тоже “главное” сообщение, только в режиме вкладки
         set_last_menu(user_id, user_id, query.message.message_id)
     except Exception:
-        # fallback
-        await send_fresh_menu(query.get_bot(), user_id, MENU_TEXT)
+        await send_fresh_menu(context.bot, user_id, MENU_TEXT)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -195,29 +186,29 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # --- BACK ---
     if data == "back_to_menu":
-        await _edit_to_menu(query, uid)
+        await _edit_to_menu(context, query, uid)
         return
 
     # --- TABS ---
     if data == "tab_buy_pack":
-        await _edit_to_tab(query, uid, "buy_pack")
+        await _edit_to_tab(context, query, uid, "buy_pack")
         return
 
     if data == "tab_settings":
-        await _edit_to_tab(query, uid, "settings")
+        await _edit_to_tab(context, query, uid, "settings")
         return
 
     if data == "tab_help":
-        await _edit_to_tab(query, uid, "help")
+        await _edit_to_tab(context, query, uid, "help")
         return
 
     if data == "tab_need_pay":
-        await _edit_to_tab(query, uid, "need_pay")
+        await _edit_to_tab(context, query, uid, "need_pay")
         return
 
     if data == "tab_blocked":
-        await _edit_to_tab(query, uid, "blocked")
+        await _edit_to_tab(context, query, uid, "blocked")
         return
 
-    # неизвестная кнопка — просто вернём меню (чтобы не зависало)
-    await _edit_to_menu(query, uid)
+    # неизвестная кнопка — возвращаем меню
+    await _edit_to_menu(context, query, uid)
