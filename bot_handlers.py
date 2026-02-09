@@ -1,3 +1,4 @@
+# bot_handlers.py
 import os
 from datetime import datetime
 
@@ -61,27 +62,62 @@ def build_start_log(update: Update) -> str:
     )
 
 
+# =========================
+#   UI TEXTS
+# =========================
+MENU_TEXT = "🤖 InstaGroq AI\n\nВыбирай действие кнопками ниже 👇"
+
+TAB_TEXT = {
+    "buy_pack": (
+        "⭐ Купить пакет\n\n"
+        "Пакеты сообщений (пример):\n"
+        "• 100 сообщений — 99₽\n"
+        "• 500 сообщений — 399₽\n"
+        "• 2000 сообщений — 999₽\n\n"
+        "Оплату подключим позже."
+    ),
+    "settings": "⚙️ Настройки\n\nСкоро добавим настройки в боте. Сейчас они есть в Mini App (⚙️ внутри чата).",
+    "help": "❓ Помощь\n\nНажми «Открыть Mini App» и пиши боту внутри приложения.",
+    "need_pay": "⭐ Доступ ограничен\n\nЧтобы открыть Mini App, нужно купить пакет.",
+    "blocked": "⛔ Доступ заблокирован.\n\nЕсли ты считаешь это ошибкой — напиши админу.",
+    # сюда потом добавим новые вкладки
+}
+
+
+def _btn_back() -> InlineKeyboardButton:
+    return InlineKeyboardButton("⬅️ Назад", callback_data="back_to_menu")
+
+
+def _tab_markup() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup([[_btn_back()]])
+
+
 def main_menu_for_user(user_id: int) -> InlineKeyboardMarkup:
     a = get_access(user_id) if user_id else {"is_free": False, "is_blocked": False}
 
     keyboard = []
 
     if a.get("is_blocked"):
-        keyboard.append([InlineKeyboardButton("⛔ Доступ заблокирован", callback_data="blocked")])
+        keyboard.append([InlineKeyboardButton("⛔ Доступ заблокирован", callback_data="tab_blocked")])
         return InlineKeyboardMarkup(keyboard)
 
     # если FREE — настоящая кнопка открытия web_app
     if a.get("is_free") and is_valid_https_url(MINIAPP_URL):
         keyboard.append([InlineKeyboardButton("🚀 Открыть Mini App", web_app=WebAppInfo(url=MINIAPP_URL))])
     else:
-        # иначе кнопка есть, но при нажатии просим купить пакет
-        keyboard.append([InlineKeyboardButton("🚀 Открыть Mini App", callback_data="need_pay")])
+        # иначе открываем вкладку оплаты
+        keyboard.append([InlineKeyboardButton("🚀 Открыть Mini App", callback_data="tab_need_pay")])
 
-    keyboard.append([InlineKeyboardButton("⭐ Купить пакет", callback_data="buy_pack")])
+    # вкладки (пока заглушки/тексты)
+    keyboard.append([InlineKeyboardButton("⭐ Купить пакет", callback_data="tab_buy_pack")])
     keyboard.append([
-        InlineKeyboardButton("⚙️ Настройки", callback_data="settings"),
-        InlineKeyboardButton("❓ Помощь", callback_data="help"),
+        InlineKeyboardButton("⚙️ Настройки", callback_data="tab_settings"),
+        InlineKeyboardButton("❓ Помощь", callback_data="tab_help"),
     ])
+
+    # сюда можешь добавлять новые вкладки:
+    # keyboard.append([InlineKeyboardButton("🧾 Профиль", callback_data="tab_profile")])
+
     return InlineKeyboardMarkup(keyboard)
 
 
@@ -92,7 +128,6 @@ async def delete_prev_menu(bot, user_id: int):
     try:
         await bot.delete_message(chat_id=chat_id, message_id=msg_id)
     except Exception:
-        # если уже удалено/нельзя — просто чистим запись
         pass
     clear_last_menu(user_id)
 
@@ -101,7 +136,7 @@ async def send_fresh_menu(bot, user_id: int, text: str):
     # удаляем предыдущее меню
     await delete_prev_menu(bot, user_id)
 
-    # отправляем новое
+    # отправляем новое меню
     m = await bot.send_message(
         chat_id=user_id,
         text=text,
@@ -110,12 +145,26 @@ async def send_fresh_menu(bot, user_id: int, text: str):
     set_last_menu(user_id, user_id, m.message_id)
 
 
-async def send_block_notice(bot, user_id: int):
-    # удаляем меню
-    await delete_prev_menu(bot, user_id)
+async def _edit_to_menu(query, user_id: int):
+    # возвращаем меню через редактирование текущего сообщения
+    try:
+        await query.message.edit_text(MENU_TEXT, reply_markup=main_menu_for_user(user_id))
+        # запоминаем что текущее сообщение — это “главное”
+        set_last_menu(user_id, user_id, query.message.message_id)
+    except Exception:
+        # если нельзя редактировать (редко) — просто шлём новое меню
+        await send_fresh_menu(query.get_bot(), user_id, MENU_TEXT)
 
-    # просто текст (без меню)
-    await bot.send_message(chat_id=user_id, text="⛔ Доступ заблокирован.")
+
+async def _edit_to_tab(query, user_id: int, tab_key: str):
+    text = TAB_TEXT.get(tab_key, "Раздел в разработке.")
+    try:
+        await query.message.edit_text(text, reply_markup=_tab_markup())
+        # это тоже “главное” сообщение, только в режиме вкладки
+        set_last_menu(user_id, user_id, query.message.message_id)
+    except Exception:
+        # fallback
+        await send_fresh_menu(query.get_bot(), user_id, MENU_TEXT)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -126,41 +175,49 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not uid:
         return
 
-    # вместо reply_text → делаем “одно меню”
-    await send_fresh_menu(
-        context.bot,
-        uid,
-        "🤖 InstaGroq AI\n\nВыбирай действие кнопками ниже 👇",
-    )
+    await send_fresh_menu(context.bot, uid, MENU_TEXT)
 
 
 async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()
-    data = query.data or ""
+    data = (query.data or "").strip()
 
-    if data == "blocked":
-        await query.message.reply_text("⛔ Тебя заблокировали.")
+    # отвечаем на callback, но не шлём сообщений
+    try:
+        await query.answer()
+    except Exception:
+        pass
+
+    user = update.effective_user
+    uid = user.id if user else 0
+    if not uid:
         return
 
-    if data == "need_pay":
-        await query.message.reply_text("⭐ Чтобы открыть Mini App, нужно купить пакет.")
+    # --- BACK ---
+    if data == "back_to_menu":
+        await _edit_to_menu(query, uid)
         return
 
-    if data == "buy_pack":
-        await query.message.reply_text(
-            "⭐ Пакеты сообщений (пример):\n"
-            "• 100 сообщений — 99₽\n"
-            "• 500 сообщений — 399₽\n"
-            "• 2000 сообщений — 999₽\n\n"
-            "Оплату подключим позже."
-        )
+    # --- TABS ---
+    if data == "tab_buy_pack":
+        await _edit_to_tab(query, uid, "buy_pack")
         return
 
-    if data == "settings":
-        await query.message.reply_text("⚙️ Настройки скоро появятся.")
+    if data == "tab_settings":
+        await _edit_to_tab(query, uid, "settings")
         return
 
-    if data == "help":
-        await query.message.reply_text("❓ Нажми «Открыть Mini App».")
+    if data == "tab_help":
+        await _edit_to_tab(query, uid, "help")
         return
+
+    if data == "tab_need_pay":
+        await _edit_to_tab(query, uid, "need_pay")
+        return
+
+    if data == "tab_blocked":
+        await _edit_to_tab(query, uid, "blocked")
+        return
+
+    # неизвестная кнопка — просто вернём меню (чтобы не зависало)
+    await _edit_to_menu(query, uid)
