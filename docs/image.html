@@ -3,7 +3,6 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <!-- FIX: запрет zoom/pinch + double-tap zoom + safe-area -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Генерация картинок</title>
 
@@ -41,17 +40,12 @@
     })();
   </script>
 
-  <!-- базовая тема/переменные -->
   <link rel="stylesheet" href="./css/index.css?v=3">
-
-  <!-- стили вкладки -->
-  <link rel="stylesheet" href="./css/image.css?v=7">
-
-  <!-- ✅ новый файл анимаций -->
+  <link rel="stylesheet" href="./css/image.css?v=3">
   <link rel="stylesheet" href="./css/image.anim.css?v=1">
 </head>
 
-<body>
+<body class="pageIn">
   <div class="imgTop">
     <a class="imgBack" id="backBtn" href="./index.html">← Назад</a>
     <div class="imgTitle">🎨 Генерация картинок</div>
@@ -59,83 +53,66 @@
   </div>
 
   <div class="imgWrap" id="chatZone">
-    <div class="imgCard imgShell">
+    <div class="imgCard">
 
-      <!-- SCREEN 1: выбор режима -->
-      <section class="screen screenActive" id="screenPick" aria-hidden="false">
-        <div class="screenHead">
-          <div class="screenKicker">Выбор режима</div>
-          <div class="screenSub">
-            Выбери, что нужно сделать: нарисовать по описанию или отредактировать свою картинку.
+      <!-- ====== SCREEN: MODE LIST ====== -->
+      <div id="modeScreen">
+        <div class="imgHint" id="modeTitle">Выбор стиля</div>
+
+        <div class="modeList" id="modeList">
+          <!-- cards injected by JS -->
+        </div>
+      </div>
+
+      <!-- ====== SCREEN: GENERATE ====== -->
+      <div id="genScreen" hidden>
+        <div class="imgHint genHeader">
+          <div class="genHeaderLeft">
+            <span class="genChip" id="selectedModeChip">Режим</span>
+            <span class="genChipPrice" id="selectedModePrice">—</span>
           </div>
+          <button class="genChange" id="changeModeBtn" type="button">Сменить</button>
         </div>
 
-        <div class="modeList" id="modeList" role="list"></div>
-      </section>
-
-      <!-- SCREEN 2: генерация/редактирование -->
-      <section class="screen" id="screenGen" aria-hidden="true">
-        <div class="genHeader">
-          <div class="genMeta">
-            <div class="genTitleRow">
-              <div class="genTitle" id="modeTitle">Режим</div>
-              <button class="genChange" id="changeModeBtn" type="button">Сменить</button>
-            </div>
-
-            <div class="genBadges">
-              <div class="badge badgePrice" id="modePrice">4 cr.</div>
-              <div class="badge badgeModel" id="modeModel">SD 3.5 Flash</div>
-            </div>
-
-            <div class="genDesc" id="modeDesc">
-              Опиши, что нужно получить — и мы сгенерируем картинку.
-            </div>
-          </div>
+        <!-- ACTIONS (видны только до генерации) -->
+        <div class="imgRow" id="actionsRow">
+          <button class="imgBtn2" id="galleryBtn" type="button">🖼️ Галерея</button>
+          <button class="imgBtn" id="genBtn" type="button">Сгенерировать</button>
         </div>
 
-        <!-- INPUT AREA -->
-        <div class="genBlock" id="inputBlock">
-          <div class="imgRow" id="btnRow">
-            <button class="imgBtn2" id="galleryBtn" type="button">🖼️ Галерея</button>
-            <button class="imgBtn" id="genBtn" type="button">Сгенерировать</button>
+        <input id="fileInput" type="file" accept="image/*" style="display:none" />
+
+        <!-- PROMPT BOX (виден только до генерации) -->
+        <div class="imgPromptBox" id="promptBox">
+          <div class="imgPreview" id="previewWrap" hidden>
+            <img id="previewImg" alt="preview" />
+            <button class="imgRemove" id="removeImgBtn" type="button" aria-label="Удалить картинку">✕</button>
           </div>
 
-          <input id="fileInput" type="file" accept="image/*" style="display:none" />
-
-          <div class="imgPromptBox" id="promptBox">
-            <div class="imgPreview" id="previewWrap" hidden>
-              <img id="previewImg" alt="preview" />
-              <button class="imgRemove" id="removeImgBtn" type="button" aria-label="Удалить картинку">✕</button>
-            </div>
-
-            <textarea
-              class="imgPrompt"
-              id="prompt"
-              placeholder="Например: кот в космосе, реалистично, 4k"
-            ></textarea>
-          </div>
+          <textarea
+            class="imgPrompt"
+            id="prompt"
+            placeholder="Например: кот в космосе, реалистично, 4k"
+          ></textarea>
         </div>
 
-        <!-- RESULT AREA -->
-        <div class="imgResult" id="result">
-          <div class="loadBox" id="loading" hidden>
-            <div class="spinner" aria-hidden="true"></div>
-            <div class="loadText">Идёт генерация…</div>
-          </div>
-
-          <div class="imgPlaceholder" id="placeholder">Здесь появится результат</div>
-          <img class="imgOut" id="outImg" alt="result" hidden />
+        <!-- LOADING -->
+        <div class="imgLoading" id="loadingBox" hidden>
+          <div class="loader"></div>
+          <div class="loadingText">Идёт генерация…</div>
         </div>
 
-        <!-- BOTTOM ACTION -->
-        <div class="bottomRow" id="bottomRow" hidden>
-          <button class="imgBtn bottomBtn" id="againBtn" type="button">Сгенерировать снова</button>
+        <!-- RESULT (показываем вместо ввода) -->
+        <div class="imgResult2" id="result2" hidden>
+          <img class="imgOut" id="outImg" alt="result" />
         </div>
 
-      </section>
+        <button class="regenBtn" id="regenBtn" type="button" hidden>Сгенерировать снова</button>
+      </div>
+
     </div>
   </div>
 
-  <script type="module" src="./js/image.js?v=7"></script>
+  <script type="module" src="./js/image.js?v=3"></script>
 </body>
 </html>
