@@ -2,7 +2,6 @@
 
 /* фикс: чтобы iOS не зумил при фокусе */
 textarea, input, button { font-size: 16px; }
-button { -webkit-tap-highlight-color: transparent; }
 
 /* верхняя панель */
 .imgTop{
@@ -29,7 +28,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .imgTitle{ font-weight: 900; font-size: 16px; }
 .imgSpacer{ flex:1; }
 
-/* зона контента */
+/* зона контента: фиксируем, чтобы не прыгало */
 .imgWrap{
   height: var(--vh);
   padding-top: calc(64px + env(safe-area-inset-top));
@@ -38,7 +37,6 @@ button { -webkit-tap-highlight-color: transparent; }
   -webkit-overflow-scrolling: touch;
 }
 
-/* карточка-контейнер */
 .imgCard{
   width: min(560px, 92vw);
   margin: 0 auto;
@@ -50,168 +48,16 @@ button { -webkit-tap-highlight-color: transparent; }
   -webkit-backdrop-filter: blur(18px);
 }
 
-.imgShell{
-  position: relative;
-  overflow: hidden;
-}
-
-.screenHead{
-  margin-bottom: 12px;
-}
-.screenKicker{
-  font-weight: 900;
-  font-size: 14px;
-  color: rgba(255,255,255,.92);
-}
-.screenSub{
-  margin-top: 6px;
+.imgHint{
+  color: rgba(255,255,255,.78);
   font-size: 13px;
-  color: rgba(255,255,255,.72);
-  line-height: 1.35;
+  margin-bottom: 10px;
 }
 
-/* ====== список режимов ====== */
-.modeList{
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.modeCard{
-  width: 100%;
-  border: 1px solid rgba(255,255,255,.10);
-  border-radius: 18px;
-  padding: 0;
-  text-align: left;
-  background: rgba(255,255,255,.06);
-  overflow: hidden;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.modeMedia{
-  position: relative;
-  height: 170px;
-  background-size: cover;
-  background-position: center;
-}
-
-.modeOverlay{
-  position:absolute;
-  inset:0;
-  background: linear-gradient(180deg, rgba(0,0,0,.05) 0%, rgba(0,0,0,.55) 100%);
-}
-
-.modePrice{
-  position:absolute;
-  left: 12px;
-  top: 12px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.16);
-  background: rgba(0,0,0,.28);
-  color: rgba(255,255,255,.95);
-  font-weight: 900;
-}
-
-.modeBody{
-  padding: 12px 14px 14px;
-}
-
-.modeTitle{
-  font-weight: 900;
-  font-size: 18px;
-  color: rgba(255,255,255,.95);
-}
-
-.modeSub{
-  margin-top: 6px;
-  font-size: 13px;
-  color: rgba(255,255,255,.70);
-  line-height: 1.35;
-}
-
-.modeOpen{
-  margin-top: 10px;
-  font-weight: 900;
-  color: rgba(255,255,255,.88);
-}
-
-/* ====== экран генерации ====== */
-.genHeader{
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  padding: 12px;
-  margin-bottom: 12px;
-}
-
-.genTitleRow{
-  display:flex;
-  align-items:center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.genTitle{
-  font-weight: 900;
-  font-size: 16px;
-  color: rgba(255,255,255,.95);
-}
-
-.genChange{
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.12);
-  font-weight: 900;
-  color: rgba(255,255,255,.92);
-  background: rgba(255,255,255,.10);
-}
-
-.genBadges{
-  margin-top: 10px;
-  display:flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.badge{
-  padding: 7px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(0,0,0,.22);
-  color: rgba(255,255,255,.92);
-  font-weight: 900;
-  font-size: 12px;
-}
-
-.badgeModel{
-  font-weight: 800;
-  color: rgba(255,255,255,.85);
-}
-
-.genDesc{
-  margin-top: 10px;
-  font-size: 13px;
-  color: rgba(255,255,255,.72);
-  line-height: 1.35;
-}
-
-/* кнопки */
 .imgRow{
   display:flex;
   gap:10px;
   margin-bottom: 10px;
-}
-
-/* если только одна кнопка — центрируем */
-.imgRow.centerOnly{
-  justify-content: center;
-}
-
-.imgRow.centerOnly .imgBtn{
-  flex: 0 0 auto;
-  min-width: 72%;
 }
 
 .imgBtn2{
@@ -286,62 +132,169 @@ button { -webkit-tap-highlight-color: transparent; }
   outline: none;
 }
 
-.imgResult{
+/* ===== MODE LIST ===== */
+.modeList{
+  display:flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: calc(var(--vh) - 160px);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 2px;
+}
+
+.modeCard{
+  width: 100%;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.92);
+  text-align: left;
+}
+
+.modeCover{
+  height: 148px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.modeOverlay{
+  position:absolute; inset:0;
+  background: linear-gradient(180deg, rgba(0,0,0,.10) 0%, rgba(0,0,0,.55) 100%);
+}
+
+.modePrice{
+  position:absolute;
+  left: 12px;
+  bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.28);
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.modeBody{
+  padding: 12px 12px 12px;
+}
+
+.modeTitleRow{
+  display:flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.modeTitleText{
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.modeOpen{
+  font-weight: 900;
+  font-size: 13px;
+  color: rgba(210,230,255,.95);
+}
+
+.modeDesc{
+  margin-top: 6px;
+  color: rgba(255,255,255,.70);
+  font-size: 13px;
+}
+
+/* ===== GEN HEADER ===== */
+.genHeader{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.genHeaderLeft{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.genChip{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.16);
+  font-weight: 900;
+}
+.genChipPrice{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.16);
+  font-weight: 900;
+  color: rgba(255,255,255,.86);
+}
+.genChange{
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.92);
+  font-weight: 900;
+}
+
+/* ===== LOADING ===== */
+.imgLoading{
+  margin-top: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.18);
+  padding: 18px 14px;
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  justify-content:center;
+  gap: 10px;
+  min-height: 220px;
+}
+
+.loader{
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 3px solid rgba(255,255,255,.20);
+  border-top-color: rgba(255,255,255,.85);
+  animation: spin 0.85s linear infinite;
+}
+.loadingText{
+  font-weight: 900;
+  color: rgba(255,255,255,.80);
+  font-size: 13px;
+}
+
+/* ===== RESULT ===== */
+.imgResult2{
   margin-top: 12px;
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid rgba(255,255,255,.10);
   background: rgba(0,0,0,.18);
-  min-height: 240px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position: relative;
 }
-
-.imgPlaceholder{
-  color: rgba(255,255,255,.65);
-  font-size: 13px;
-}
-
 .imgOut{
   width: 100%;
   height: auto;
   display:block;
 }
 
-/* loader */
-.loadBox{
-  position:absolute;
-  inset:0;
-  display:flex;
-  flex-direction: column;
-  align-items:center;
-  justify-content:center;
-  gap: 12px;
-  background: radial-gradient(420px 280px at 50% 40%, rgba(255,255,255,.06) 0%, rgba(0,0,0,.22) 60%, rgba(0,0,0,.30) 100%);
-}
-
-.spinner{
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
-  border: 4px solid rgba(255,255,255,.20);
-  border-top-color: rgba(255,255,255,.85);
-  animation: spin 1s linear infinite;
-}
-
-.loadText{
-  font-weight: 900;
-  color: rgba(255,255,255,.86);
-}
-
-/* кнопка снизу после результата */
-.bottomRow{
+.regenBtn{
   margin-top: 12px;
-  display:flex;
-}
-
-.bottomBtn{
   width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(180deg, var(--accent1) 0%, var(--accent2) 100%);
 }
