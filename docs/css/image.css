@@ -1,3 +1,7 @@
+/* фикс: чтобы iOS не зумил при фокусе */
+textarea, input, button { font-size: 16px; }
+
+/* верхняя панель */
 .imgTop{
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -16,27 +20,24 @@
 .imgBack{
   color: rgba(210,230,255,.95);
   text-decoration: none;
-  font-weight: 800;
-}
-
-.imgTitle{
   font-weight: 900;
-  font-size: 16px;
 }
 
+.imgTitle{ font-weight: 900; font-size: 16px; }
 .imgSpacer{ flex:1; }
 
+/* зона контента: фиксируем, чтобы не прыгало */
 .imgWrap{
-  min-height: var(--vh);
+  height: var(--vh);
   padding-top: calc(64px + env(safe-area-inset-top));
-  padding-bottom: calc(18px + env(safe-area-inset-bottom));
-  display:flex;
-  align-items:flex-start;
-  justify-content:center;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .imgCard{
   width: min(560px, 92vw);
+  margin: 0 auto;
   background: rgba(20,30,45,.35);
   border: 1px solid rgba(255,255,255,.10);
   border-radius: 18px;
@@ -51,28 +52,82 @@
   margin-bottom: 10px;
 }
 
-.imgPrompt{
-  width: 100%;
-  min-height: 110px;
-  resize: none;
-  border-radius: 14px;
-  padding: 12px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.10);
-  color: rgba(255,255,255,.92);
-  outline: none;
+.imgRow{
+  display:flex;
+  gap:10px;
+  margin-bottom: 10px;
 }
 
-.imgBtn{
-  width: 100%;
-  margin-top: 10px;
+.imgBtn2{
+  flex: 1;
   padding: 12px 14px;
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,.12);
   font-weight: 900;
-  font-size: 15px;
+  color: rgba(255,255,255,.92);
+  background: rgba(255,255,255,.10);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.imgBtn{
+  flex: 1.2;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  font-weight: 900;
   color: #fff;
   background: linear-gradient(180deg, var(--accent1) 0%, var(--accent2) 100%);
+}
+
+/* коробка ввода: превью сверху, текст снизу */
+.imgPromptBox{
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.10);
+  overflow: hidden;
+}
+
+.imgPreview{
+  position: relative;
+  padding: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
+}
+
+.imgPreview img{
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.14);
+}
+
+.imgRemove{
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.25);
+  color: rgba(255,255,255,.95);
+  font-weight: 900;
+}
+
+.imgPrompt{
+  width: 100%;
+  min-height: 120px;
+  resize: none;
+  border: 0;
+  padding: 12px;
+  background: transparent;
+  color: rgba(255,255,255,.92);
+  outline: none;
 }
 
 .imgResult{
@@ -90,4 +145,10 @@
 .imgPlaceholder{
   color: rgba(255,255,255,.65);
   font-size: 13px;
+}
+
+.imgOut{
+  width: 100%;
+  height: auto;
+  display:block;
 }
