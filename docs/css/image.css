@@ -7,14 +7,25 @@
   padding:18px;
   margin-bottom:16px;
   border-radius:20px;
-  background:rgba(255,255,255,.12);
+
+  /* ✅ было: rgba(255,255,255,.12) */
+  /* ✅ стало: берём цвет из темы */
+  background: var(--glass, rgba(255,255,255,.12));
+  border: 1px solid var(--stroke, rgba(255,255,255,.18));
 }
 
 .preview{
   width:90px;
   height:90px;
   border-radius:16px;
-  background:linear-gradient(135deg,#6daaff,#3b4cff);
+
+  /* ✅ было: фиксированный синий */
+  /* ✅ стало: градиент из выбранной темы */
+  background: linear-gradient(
+    135deg,
+    var(--accent1, #6daaff),
+    var(--accent2, #3b4cff)
+  );
 }
 
 .info{flex:1}
