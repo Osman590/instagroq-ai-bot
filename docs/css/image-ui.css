@@ -6,21 +6,29 @@
   display:block;
 }
 
-/* горизонтальный скролл */
+/* ✅ ВЕРТИКАЛЬНАЯ ПРОКРУТКА (как на твоём рисунке) */
 .cardScroll{
-  overflow-x:auto;
-  padding-bottom:14px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+
+  /* чтобы список занимал почти весь экран и скроллился */
+  max-height: calc(var(--vh, 100vh) - 140px);
+  padding-right: 2px;
 }
 
+/* список карточек теперь в столбик */
 .cardRow{
   display:flex;
+  flex-direction:column;
   gap:16px;
+  padding-bottom:16px;
 }
 
-/* КАРТОЧКА */
+/* карточка на всю ширину */
 .modeCard{
-  flex:0 0 260px;              /* ширина карточки */
-  height:360px;                /* ❗ увеличили длину */
+  width:100%;
+  height:360px;                 /* ✅ длинная карточка */
   background:rgba(255,255,255,.12);
   border-radius:22px;
   overflow:hidden;
@@ -29,9 +37,9 @@
   flex-direction:column;
 }
 
-/* КАРТИНКА */
+/* картинка сверху большая */
 .modeImg{
-  height:200px;                /* ❗ картинка выше */
+  height:220px;                 /* ✅ как в примере */
   flex-shrink:0;
 }
 
@@ -41,7 +49,7 @@
   object-fit:cover;
 }
 
-/* НИЗ КАРТОЧКИ */
+/* низ карточки */
 .modeBody{
   padding:14px;
   display:flex;
@@ -51,21 +59,21 @@
 }
 
 .modeTitle{
-  font-size:15px;
-  font-weight:700;
+  font-size:16px;
+  font-weight:800;
 }
 
 .modeDesc{
-  font-size:12px;
+  font-size:13px;
   opacity:.75;
   line-height:1.3;
 }
 
-/* ЦЕНА */
+/* цена внизу слева */
 .modePrice{
   margin-top:auto;
-  font-weight:800;
-  font-size:15px;
+  font-weight:900;
+  font-size:18px;
   color:#ffd966;
 }
 
