@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
+  <!-- FIX: запрет zoom/pinch + double-tap zoom + safe-area -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Генерация картинок</title>
 
@@ -21,9 +22,30 @@
     })();
   </script>
 
+  <!-- FIX iOS/webview: pinch/gesture + double-tap zoom -->
+  <script>
+    (function(){
+      document.addEventListener("gesturestart", (e) => e.preventDefault(), { passive:false });
+      document.addEventListener("gesturechange", (e) => e.preventDefault(), { passive:false });
+      document.addEventListener("gestureend", (e) => e.preventDefault(), { passive:false });
+
+      let lastTouchEnd = 0;
+      document.addEventListener("touchend", (e) => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) e.preventDefault();
+        lastTouchEnd = now;
+      }, { passive:false });
+
+      document.addEventListener("dblclick", (e) => e.preventDefault(), { passive:false });
+    })();
+  </script>
+
+  <!-- базовая тема/переменные -->
   <link rel="stylesheet" href="./css/index.css?v=3">
-  <link rel="stylesheet" href="./css/image.css?v=1">
+  <!-- стили вкладки -->
+  <link rel="stylesheet" href="./css/image.css?v=2">
 </head>
+
 <body>
   <div class="imgTop">
     <a class="imgBack" id="backBtn" href="./index.html">← Назад</a>
@@ -31,20 +53,41 @@
     <div class="imgSpacer"></div>
   </div>
 
-  <div class="imgWrap">
+  <div class="imgWrap" id="chatZone">
     <div class="imgCard">
-      <div class="imgHint">Напиши, что нужно нарисовать (пока только UI, генерацию подключим следующим шагом).</div>
+      <div class="imgHint">
+        Выбери картинку из галереи (если нужно) и напиши промпт.
+      </div>
 
-      <textarea class="imgPrompt" id="prompt" placeholder="Например: кот в космосе, реалистично, 4k"></textarea>
+      <!-- Галерея -->
+      <div class="imgRow">
+        <button class="imgBtn2" id="galleryBtn" type="button">🖼️ Галерея</button>
+        <button class="imgBtn" id="genBtn" type="button">Сгенерировать</button>
+      </div>
 
-      <button class="imgBtn" id="genBtn" type="button">Сгенерировать</button>
+      <input id="fileInput" type="file" accept="image/*" style="display:none" />
+
+      <!-- Превью + текст -->
+      <div class="imgPromptBox" id="promptBox">
+        <div class="imgPreview" id="previewWrap" hidden>
+          <img id="previewImg" alt="preview" />
+          <button class="imgRemove" id="removeImgBtn" type="button" aria-label="Удалить картинку">✕</button>
+        </div>
+
+        <textarea
+          class="imgPrompt"
+          id="prompt"
+          placeholder="Например: кот в космосе, реалистично, 4k"
+        ></textarea>
+      </div>
 
       <div class="imgResult" id="result">
-        <div class="imgPlaceholder">Здесь появится картинка</div>
+        <div class="imgPlaceholder" id="placeholder">Здесь появится картинка</div>
+        <img class="imgOut" id="outImg" alt="result" hidden />
       </div>
     </div>
   </div>
 
-  <script type="module" src="./js/image.js?v=1"></script>
+  <script type="module" src="./js/image.js?v=2"></script>
 </body>
 </html>
