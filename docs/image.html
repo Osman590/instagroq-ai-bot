@@ -1,3 +1,4 @@
+<!-- docs/image.html -->
 <!doctype html>
 <html lang="ru">
 <head>
@@ -40,49 +41,48 @@
     })();
   </script>
 
-  <!-- базовая тема/переменные -->
   <link rel="stylesheet" href="./css/index.css?v=3">
-  <!-- стили вкладки -->
   <link rel="stylesheet" href="./css/image.css?v=3">
 </head>
 
-<body>
+<body class="pageIn">
   <div class="imgTop">
-    <!-- ✅ теперь эта кнопка умеет: внутри вкладки = назад к выбору, если мы на генерации -->
     <a class="imgBack" id="backBtn" href="./index.html">← Назад</a>
-    <div class="imgTitle" id="topTitle">🎨 Генерация картинок</div>
+    <div class="imgTitle">🎨 Генерация картинок</div>
     <div class="imgSpacer"></div>
   </div>
 
   <div class="imgWrap" id="chatZone">
     <div class="imgCard">
 
-      <!-- ✅ ЭКРАН ВЫБОРА РЕЖИМА -->
-      <div id="modeView">
-        <div class="imgHint">
-          Выбери режим (прокручивается). Потом откроется экран генерации.
-        </div>
+      <!-- ====== SCREEN: MODE LIST ====== -->
+      <div id="modeScreen">
+        <div class="imgHint" id="modeTitle">Выбор стиля</div>
 
         <div class="modeList" id="modeList">
-          <!-- карточки создаёт JS -->
+          <!-- cards injected by JS -->
         </div>
       </div>
 
-      <!-- ✅ ЭКРАН ГЕНЕРАЦИИ -->
-      <div id="genView" hidden>
-        <div class="imgHint" id="modeHint">
-          Выбери картинку из галереи (если нужно) и напиши промпт.
+      <!-- ====== SCREEN: GENERATE ====== -->
+      <div id="genScreen" hidden>
+        <div class="imgHint genHeader">
+          <div class="genHeaderLeft">
+            <span class="genChip" id="selectedModeChip">Режим</span>
+            <span class="genChipPrice" id="selectedModePrice">—</span>
+          </div>
+          <button class="genChange" id="changeModeBtn" type="button">Сменить</button>
         </div>
 
-        <!-- Галерея -->
-        <div class="imgRow">
+        <!-- ACTIONS (видны только до генерации) -->
+        <div class="imgRow" id="actionsRow">
           <button class="imgBtn2" id="galleryBtn" type="button">🖼️ Галерея</button>
           <button class="imgBtn" id="genBtn" type="button">Сгенерировать</button>
         </div>
 
         <input id="fileInput" type="file" accept="image/*" style="display:none" />
 
-        <!-- Превью + текст -->
+        <!-- PROMPT BOX (виден только до генерации) -->
         <div class="imgPromptBox" id="promptBox">
           <div class="imgPreview" id="previewWrap" hidden>
             <img id="previewImg" alt="preview" />
@@ -96,10 +96,18 @@
           ></textarea>
         </div>
 
-        <div class="imgResult" id="result">
-          <div class="imgPlaceholder" id="placeholder">Здесь появится картинка</div>
-          <img class="imgOut" id="outImg" alt="result" hidden />
+        <!-- LOADING -->
+        <div class="imgLoading" id="loadingBox" hidden>
+          <div class="loader"></div>
+          <div class="loadingText">Идёт генерация…</div>
         </div>
+
+        <!-- RESULT (показываем вместо ввода) -->
+        <div class="imgResult2" id="result2" hidden>
+          <img class="imgOut" id="outImg" alt="result" />
+        </div>
+
+        <button class="regenBtn" id="regenBtn" type="button" hidden>Сгенерировать снова</button>
       </div>
 
     </div>
