@@ -1,1 +1,98 @@
- 
+/* docs/css/image.css */
+
+/* layout */
+.wrap{
+  padding-top: calc(56px + env(safe-area-inset-top));
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  height: var(--vh);
+  overflow-y: auto;
+}
+
+/* header row inside card */
+.rowHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:12px;
+}
+.modeName{
+  font-weight:700;
+  font-size:15px;
+}
+
+/* gallery */
+.gallery{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.previewWrap{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.previewWrap img{
+  width:100%;
+  max-height:260px;
+  object-fit:contain;
+  border-radius:16px;
+  background: rgba(0,0,0,.15);
+}
+
+/* prompt */
+.promptBox{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-bottom:14px;
+}
+.promptBox textarea{
+  width:100%;
+  border-radius:16px;
+  padding:12px 14px;
+  border:1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.12);
+  color:#fff;
+  font-size:14px;
+  resize:none;
+  outline:none;
+}
+.promptBox textarea::placeholder{
+  color: rgba(255,255,255,.6);
+}
+
+/* buttons */
+.btn{
+  width:100%;
+  padding:14px 16px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.14);
+  font-size:16px;
+  font-weight:800;
+  background: linear-gradient(180deg, var(--accent1) 0%, var(--accent2) 100%);
+  color:#fff;
+  box-shadow: 0 12px 26px rgba(0,0,0,.18);
+}
+
+.pill.danger{
+  background: rgba(255,80,80,.18);
+  border-color: rgba(255,80,80,.35);
+}
+
+/* result */
+.result{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.loading{
+  text-align:center;
+  opacity:.8;
+}
+.out img{
+  width:100%;
+  border-radius:18px;
+  background: rgba(0,0,0,.15);
+}
