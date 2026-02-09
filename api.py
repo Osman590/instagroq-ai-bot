@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 
-from groq_client import ask_groq
+from groq_client import ask_groq, ask_groq_chat
 
 api = Flask(__name__)
 CORS(api)
@@ -68,6 +68,35 @@ def _ensure_columns():
 
 
 _ensure_columns()
+
+# ===========================
+# ✅ MEMORY (server-side)
+# ===========================
+MEMORY_MAX_MESSAGES = int((os.getenv("MEMORY_MAX_MESSAGES") or "40").strip() or "40")
+USER_MEMORY: Dict[int, list] = {}  # {user_id: [{"role":"user"/"assistant","content":"..."}]}
+
+
+def mem_get(uid: int) -> list:
+    return USER_MEMORY.get(uid, []).copy()
+
+
+def mem_clear(uid: int) -> None:
+    USER_MEMORY.pop(uid, None)
+
+
+def mem_append(uid: int, role: str, content: str) -> None:
+    if not uid or role not in ("user", "assistant"):
+        return
+    content = (content or "").strip()
+    if not content:
+        return
+    lst = USER_MEMORY.get(uid)
+    if lst is None:
+        lst = []
+        USER_MEMORY[uid] = lst
+    lst.append({"role": role, "content": content})
+    if len(lst) > MEMORY_MAX_MESSAGES:
+        USER_MEMORY[uid] = lst[-MEMORY_MAX_MESSAGES:]
 
 
 def set_free(user_id: int, value: bool) -> None:
@@ -243,6 +272,22 @@ def api_access(user_id: int):
     return jsonify(get_access(user_id))
 
 
+# ✅ очистка памяти ИИ при "Очистить чат"
+@api.post("/api/memory/clear")
+def api_memory_clear():
+    data: Dict[str, Any] = request.get_json(silent=True) or {}
+    tg_user_id = data.get("tg_user_id") or data.get("telegram_user_id") or 0
+    try:
+        uid = int(tg_user_id)
+    except Exception:
+        uid = 0
+    if not uid:
+        return jsonify({"ok": False, "error": "no_user"}), 400
+
+    mem_clear(uid)
+    return jsonify({"ok": True})
+
+
 @api.post("/api/chat")
 def api_chat():
     data: Dict[str, Any] = request.get_json(silent=True) or {}
@@ -277,7 +322,13 @@ def api_chat():
     persona = data.get("persona") or "friendly"
 
     try:
-        reply = ask_groq(text, lang=lang, style=style, persona=persona)
+        # ✅ server memory: добавляем реплику пользователя → отправляем весь диалог
+        mem_append(tg_user_id_int, "user", text)
+        convo = mem_get(tg_user_id_int)
+
+        reply = ask_groq_chat(convo, lang=lang, style=style, persona=persona)
+
+        mem_append(tg_user_id_int, "assistant", reply)
     except Exception as e:
         send_log_to_group(f"❌ Ошибка /api/chat: {e}")
         return jsonify({"error": str(e)}), 500
