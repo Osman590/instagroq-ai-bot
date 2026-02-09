@@ -1,13 +1,13 @@
 import os
 import sqlite3
 from datetime import datetime
-from typing import Any, Dict, Tuple, Optional
+from typing import Any, Dict, Tuple, Optional, List
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 
-from groq_client import ask_groq, ask_groq_chat
+from groq_client import ask_groq
 
 api = Flask(__name__)
 CORS(api)
@@ -44,6 +44,18 @@ def db_init():
         )
         """
     )
+    # ✅ память чата
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS chat_memory (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            role TEXT NOT NULL,               -- "user" | "assistant"
+            text TEXT NOT NULL,
+            created_at TEXT
+        )
+        """
+    )
     con.commit()
     con.close()
 
@@ -69,36 +81,10 @@ def _ensure_columns():
 
 _ensure_columns()
 
-# ===========================
-# ✅ MEMORY (server-side)
-# ===========================
-MEMORY_MAX_MESSAGES = int((os.getenv("MEMORY_MAX_MESSAGES") or "40").strip() or "40")
-USER_MEMORY: Dict[int, list] = {}  # {user_id: [{"role":"user"/"assistant","content":"..."}]}
 
-
-def mem_get(uid: int) -> list:
-    return USER_MEMORY.get(uid, []).copy()
-
-
-def mem_clear(uid: int) -> None:
-    USER_MEMORY.pop(uid, None)
-
-
-def mem_append(uid: int, role: str, content: str) -> None:
-    if not uid or role not in ("user", "assistant"):
-        return
-    content = (content or "").strip()
-    if not content:
-        return
-    lst = USER_MEMORY.get(uid)
-    if lst is None:
-        lst = []
-        USER_MEMORY[uid] = lst
-    lst.append({"role": role, "content": content})
-    if len(lst) > MEMORY_MAX_MESSAGES:
-        USER_MEMORY[uid] = lst[-MEMORY_MAX_MESSAGES:]
-
-
+# =========================
+# ACCESS (как было)
+# =========================
 def set_free(user_id: int, value: bool) -> None:
     con = db_conn()
     cur = con.cursor()
@@ -208,6 +194,9 @@ def get_last_menu(user_id: int) -> Tuple[Optional[int], Optional[int]]:
     return a.get("last_menu_chat_id"), a.get("last_menu_message_id")
 
 
+# =========================
+# LOG (как было)
+# =========================
 def send_log_to_group(text: str) -> Tuple[bool, str]:
     if not BOT_TOKEN:
         return False, "BOT_TOKEN is empty"
@@ -243,6 +232,68 @@ def extract_last_user_message(raw: str) -> str:
     return s
 
 
+# =========================
+# ✅ MEMORY (новое)
+# =========================
+def mem_add(user_id: int, role: str, text: str) -> None:
+    con = db_conn()
+    cur = con.cursor()
+    cur.execute(
+        "INSERT INTO chat_memory (user_id, role, text, created_at) VALUES (?, ?, ?, ?)",
+        (user_id, role, text, datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+    )
+    con.commit()
+    con.close()
+
+
+def mem_get(user_id: int, limit: int = 24) -> List[Dict[str, str]]:
+    con = db_conn()
+    cur = con.cursor()
+    cur.execute(
+        """
+        SELECT role, text
+        FROM chat_memory
+        WHERE user_id=?
+        ORDER BY id DESC
+        LIMIT ?
+        """,
+        (user_id, limit),
+    )
+    rows = cur.fetchall()
+    con.close()
+    rows.reverse()  # в правильный порядок (старые -> новые)
+    out = []
+    for r in rows:
+        out.append({"role": r[0], "text": r[1]})
+    return out
+
+
+def mem_clear(user_id: int) -> None:
+    con = db_conn()
+    cur = con.cursor()
+    cur.execute("DELETE FROM chat_memory WHERE user_id=?", (user_id,))
+    con.commit()
+    con.close()
+
+
+def build_memory_prompt(history: List[Dict[str, str]], user_text: str) -> str:
+    lines = []
+    lines.append("Conversation:")
+    if history:
+        for m in history:
+            role = "User" if m.get("role") == "user" else "Assistant"
+            lines.append(f"{role}: {m.get('text','')}")
+    else:
+        lines.append("(empty)")
+    lines.append("")
+    lines.append(f"User: {user_text}")
+    lines.append("Assistant:")
+    return "\n".join(lines)
+
+
+# =========================
+# ROUTES
+# =========================
 @api.get("/")
 def root():
     return "ok"
@@ -272,19 +323,27 @@ def api_access(user_id: int):
     return jsonify(get_access(user_id))
 
 
-# ✅ очистка памяти ИИ при "Очистить чат"
+# ✅ очистка памяти по кнопке "Очистить"
 @api.post("/api/memory/clear")
 def api_memory_clear():
     data: Dict[str, Any] = request.get_json(silent=True) or {}
-    tg_user_id = data.get("tg_user_id") or data.get("telegram_user_id") or 0
+    tg_user_id = data.get("tg_user_id") or 0
     try:
-        uid = int(tg_user_id)
+        tg_user_id_int = int(tg_user_id)
     except Exception:
-        uid = 0
-    if not uid:
-        return jsonify({"ok": False, "error": "no_user"}), 400
+        tg_user_id_int = 0
 
-    mem_clear(uid)
+    if not tg_user_id_int:
+        return jsonify({"error": "bad_user_id"}), 400
+
+    # доступ как в чате
+    a = get_access(tg_user_id_int)
+    if a["is_blocked"]:
+        return jsonify({"error": "blocked"}), 403
+    if not a["is_free"]:
+        return jsonify({"error": "payment_required"}), 402
+
+    mem_clear(tg_user_id_int)
     return jsonify({"ok": True})
 
 
@@ -321,17 +380,21 @@ def api_chat():
     style = data.get("style") or "steps"
     persona = data.get("persona") or "friendly"
 
+    # ✅ берём историю + строим промпт с памятью
+    history = mem_get(tg_user_id_int, limit=24)
+    prompt_with_memory = build_memory_prompt(history, text)
+
+    # ✅ сохраняем user сообщение в память ДО ответа
+    mem_add(tg_user_id_int, "user", text)
+
     try:
-        # ✅ server memory: добавляем реплику пользователя → отправляем весь диалог
-        mem_append(tg_user_id_int, "user", text)
-        convo = mem_get(tg_user_id_int)
-
-        reply = ask_groq_chat(convo, lang=lang, style=style, persona=persona)
-
-        mem_append(tg_user_id_int, "assistant", reply)
+        reply = ask_groq(prompt_with_memory, lang=lang, style=style, persona=persona)
     except Exception as e:
         send_log_to_group(f"❌ Ошибка /api/chat: {e}")
         return jsonify({"error": str(e)}), 500
+
+    # ✅ сохраняем ответ в память
+    mem_add(tg_user_id_int, "assistant", reply)
 
     time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
