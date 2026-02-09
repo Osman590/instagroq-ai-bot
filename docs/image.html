@@ -1,41 +1,86 @@
-<div id="cardsScreen" class="screen active">
-  <div class="cards">
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Генерация изображений</title>
 
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/image.css">
+  <link rel="stylesheet" href="./css/image-ui.css">
+</head>
+
+<body>
+<div id="app">
+
+  <!-- ===== КАРТОЧКИ ===== -->
+  <section id="cards" class="screen active">
     <div class="card" data-mode="text">
-      <div class="card-preview preview-text"></div>
-      <div class="card-content">
-        <div class="card-title">Генерация по тексту</div>
-        <div class="card-desc">Создай изображение по описанию</div>
-        <div class="card-price">⭐ 4</div>
+      <div class="preview"></div>
+      <div class="info">
+        <div class="title">Генерация по тексту</div>
+        <div class="desc">Создай изображение по описанию</div>
+        <div class="price">⭐ 4</div>
       </div>
     </div>
 
     <div class="card" data-mode="image">
-      <div class="card-preview preview-image"></div>
-      <div class="card-content">
-        <div class="card-title">Из картинки</div>
-        <div class="card-desc">Измени стиль или детали изображения</div>
-        <div class="card-price">⭐ 5</div>
+      <div class="preview"></div>
+      <div class="info">
+        <div class="title">Из картинки</div>
+        <div class="desc">Измени стиль изображения</div>
+        <div class="price">⭐ 5</div>
       </div>
     </div>
 
     <div class="card" data-mode="removebg">
-      <div class="card-preview preview-remove"></div>
-      <div class="card-content">
-        <div class="card-title">Удалить фон</div>
-        <div class="card-desc">Сделать фон прозрачным</div>
-        <div class="card-price">⭐ 5</div>
+      <div class="preview"></div>
+      <div class="info">
+        <div class="title">Удалить фон</div>
+        <div class="desc">Сделать фон прозрачным</div>
+        <div class="price">⭐ 5</div>
       </div>
     </div>
 
     <div class="card" data-mode="upscale">
-      <div class="card-preview preview-upscale"></div>
-      <div class="card-content">
-        <div class="card-title">Улучшить качество</div>
-        <div class="card-desc">Повысить чёткость изображения</div>
-        <div class="card-price">⭐ 6</div>
+      <div class="preview"></div>
+      <div class="info">
+        <div class="title">Улучшить качество</div>
+        <div class="desc">Повысить чёткость</div>
+        <div class="price">⭐ 6</div>
       </div>
     </div>
+  </section>
 
-  </div>
+  <!-- ===== ФОРМА ===== -->
+  <section id="form" class="screen">
+    <button id="back">← Назад</button>
+
+    <button id="gallery" class="hidden">Галерея</button>
+    <input id="file" type="file" accept="image/*" hidden>
+
+    <textarea id="prompt" placeholder="Например: кот в космосе, реалистично"></textarea>
+
+    <button id="generate">Сгенерировать</button>
+  </section>
+
+  <!-- ===== ЗАГРУЗКА ===== -->
+  <section id="loading" class="screen center">
+    <div class="loader"></div>
+    <div>Генерация… ~15 сек</div>
+  </section>
+
+  <!-- ===== РЕЗУЛЬТАТ ===== -->
+  <section id="result" class="screen center">
+    <img id="resultImg">
+    <button id="repeat">Повторить</button>
+    <button id="close">Закрыть</button>
+  </section>
+
 </div>
+
+<script type="module" src="./js/image-page.js"></script>
+</body>
+</html>
