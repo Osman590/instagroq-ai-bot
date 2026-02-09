@@ -1,73 +1,33 @@
-/* ===== ТЕМА ===== */
-:root{
-  --card-bg: rgba(255,255,255,.10);
-  --card-border: rgba(255,255,255,.18);
-}
-
-:root[data-theme="blue"]{
-  --accent: #5bbcff;
-}
-:root[data-theme="purple"]{
-  --accent: #b48cff;
-}
-:root[data-theme="green"]{
-  --accent: #6dffb5;
-}
-
-/* ===== КАРТОЧКИ ===== */
-.cards{
-  display:flex;
-  flex-direction:column;
-  gap:18px;
-}
+.screen{display:none;padding:16px}
+.screen.active{display:block}
 
 .card{
   display:flex;
   gap:16px;
   padding:18px;
-  border-radius:22px;
-  background:var(--card-bg);
-  border:1px solid var(--card-border);
+  margin-bottom:16px;
+  border-radius:20px;
+  background:rgba(255,255,255,.12);
 }
 
-/* ===== ПРЕВЬЮ (БЕЗ ФАЙЛОВ) ===== */
-.card-preview{
-  width:92px;
-  height:92px;
+.preview{
+  width:90px;
+  height:90px;
   border-radius:16px;
-  flex-shrink:0;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(255,255,255,.25), transparent 60%),
-    linear-gradient(135deg, var(--accent), rgba(0,0,0,.4));
+  background:linear-gradient(135deg,#6daaff,#3b4cff);
 }
 
-/* разные “настроения” */
-.preview-text{ filter: hue-rotate(0deg); }
-.preview-image{ filter: hue-rotate(40deg); }
-.preview-remove{ filter: hue-rotate(80deg); }
-.preview-upscale{ filter: hue-rotate(120deg); }
+.info{flex:1}
+.title{font-size:15px;font-weight:600}
+.desc{font-size:12px;opacity:.7;margin-top:4px}
+.price{margin-top:8px}
 
-/* ===== ТЕКСТ ===== */
-.card-content{
-  flex:1;
+.center{
   display:flex;
   flex-direction:column;
+  align-items:center;
   justify-content:center;
-  gap:6px;
+  height:100%;
 }
 
-.card-title{
-  font-size:15px;
-  font-weight:600;
-}
-
-.card-desc{
-  font-size:12.5px;
-  opacity:.7;
-}
-
-.card-price{
-  margin-top:6px;
-  font-size:14px;
-  opacity:.85;
-}
+.hidden{display:none}
