@@ -30,157 +30,108 @@ if (backBtn) {
   backBtn.href = "./index.html?lang=" + encodeURIComponent(lang) + "&theme=" + encodeURIComponent(theme);
 }
 
-// ===== smooth exit on back =====
-function smoothGo(href){
-  document.body.classList.remove("pageIn");
-  document.body.classList.add("pageOut");
-  setTimeout(() => { window.location.href = href; }, 260);
-}
-if (backBtn) {
-  backBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    smoothGo(backBtn.href);
-  });
-}
-
-// ===== MODE CONFIG =====
-// себестоимость: SD 3.5 Flash = 2.5 credits
-// твоя прибыль 32% => 2.5 / 0.68 = 3.68 => округляем до 4 cr
-const PRICE_TXT2IMG = 4;
-const PRICE_EDIT = 8;   // редактирование дороже (больше операций)
-const PRICE_STYLE = 12; // перенос стиля дороже
-
-const MODES = [
-  {
-    id: "txt2img",
-    title: "Нарисовать по тексту",
-    desc: "Обычная генерация по промпту",
-    price: PRICE_TXT2IMG,
-    cover: "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    id: "edit",
-    title: "Редактировать картинку",
-    desc: "Изменить детали/стиль по промпту",
-    price: PRICE_EDIT,
-    cover: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    id: "style",
-    title: "Перенос стиля",
-    desc: "Сделать в выбранном стиле (аниме/арт/кино)",
-    price: PRICE_STYLE,
-    cover: "https://images.unsplash.com/photo-1526481280695-3c687fd643ed?auto=format&fit=crop&w=1200&q=80"
-  }
-];
-
-const STORAGE_MODE = "miniapp_img_mode_v1";
-
 // ===== DOM =====
-const modeScreen = document.getElementById("modeScreen");
-const genScreen = document.getElementById("genScreen");
-const modeList = document.getElementById("modeList");
+const screenPick = document.getElementById("screenPick");
+const screenGen  = document.getElementById("screenGen");
+const modeList   = document.getElementById("modeList");
 
-const selectedModeChip = document.getElementById("selectedModeChip");
-const selectedModePrice = document.getElementById("selectedModePrice");
+const modeTitle  = document.getElementById("modeTitle");
+const modeDesc   = document.getElementById("modeDesc");
+const modePrice  = document.getElementById("modePrice");
+const modeModel  = document.getElementById("modeModel");
 const changeModeBtn = document.getElementById("changeModeBtn");
 
 const galleryBtn = document.getElementById("galleryBtn");
-const fileInput = document.getElementById("fileInput");
-const previewWrap = document.getElementById("previewWrap");
+const genBtn     = document.getElementById("genBtn");
+const btnRow     = document.getElementById("btnRow");
+
+const fileInput  = document.getElementById("fileInput");
+const previewWrap= document.getElementById("previewWrap");
 const previewImg = document.getElementById("previewImg");
 const removeImgBtn = document.getElementById("removeImgBtn");
 
-const promptEl = document.getElementById("prompt");
-const chatZone = document.getElementById("chatZone");
+const promptEl   = document.getElementById("prompt");
+const chatZone   = document.getElementById("chatZone");
 
-const actionsRow = document.getElementById("actionsRow");
-const promptBox = document.getElementById("promptBox");
+const inputBlock = document.getElementById("inputBlock");
+const resultBox  = document.getElementById("result");
+const placeholder= document.getElementById("placeholder");
+const outImg     = document.getElementById("outImg");
 
-const loadingBox = document.getElementById("loadingBox");
-const result2 = document.getElementById("result2");
-const outImg = document.getElementById("outImg");
+const loading    = document.getElementById("loading");
+const bottomRow  = document.getElementById("bottomRow");
+const againBtn   = document.getElementById("againBtn");
 
-const genBtn = document.getElementById("genBtn");
-const regenBtn = document.getElementById("regenBtn");
-
-// ===== state =====
-let selectedFile = null;
-let currentModeId = null;
-
-function getSavedMode(){
-  try { return localStorage.getItem(STORAGE_MODE) || "txt2img"; }
-  catch(e){ return "txt2img"; }
-}
-function saveMode(id){
-  try { localStorage.setItem(STORAGE_MODE, id); } catch(e){}
-}
-
-function getModeById(id){
-  return MODES.find(m => m.id === id) || MODES[0];
-}
-
-// ===== UI NAV =====
-function showModeList(){
-  if (modeScreen) modeScreen.hidden = false;
-  if (genScreen) genScreen.hidden = true;
-}
-
-function showGen(){
-  if (modeScreen) modeScreen.hidden = true;
-  if (genScreen) genScreen.hidden = false;
-}
-
-function setCurrentMode(id){
-  currentModeId = id;
-  const m = getModeById(id);
-  if (selectedModeChip) selectedModeChip.textContent = m.title;
-  if (selectedModePrice) selectedModePrice.textContent = `${m.price} cr.`;
-  saveMode(id);
-}
-
-// ===== build cards =====
-function buildModeCards(){
-  if (!modeList) return;
-  modeList.innerHTML = "";
-
-  for (const m of MODES){
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "modeCard";
-    card.setAttribute("data-mode", m.id);
-
-    card.innerHTML = `
-      <div class="modeCover" style="background-image:url('${m.cover}')">
-        <div class="modeOverlay"></div>
-        <div class="modePrice">от ${m.price} cr.</div>
-      </div>
-      <div class="modeBody">
-        <div class="modeTitleRow">
-          <div class="modeTitleText">${m.title}</div>
-          <div class="modeOpen">Открыть →</div>
-        </div>
-        <div class="modeDesc">${m.desc}</div>
-      </div>
-    `;
-
-    card.addEventListener("click", () => {
-      setCurrentMode(m.id);
-
-      // плавный переход внутри страницы
-      document.body.classList.add("fadeSwap");
-      setTimeout(() => {
-        document.body.classList.remove("fadeSwap");
-        showGen();
-        resetToInputState();
-      }, 220);
-    });
-
-    modeList.appendChild(card);
+// ===== modes (цены уже с твоей маржой) =====
+// Примечание: "SD 3.5 Flash" как самый дешёвый/адекватный по качеству (2.5 cr. базово),
+// а цены в UI выставлены так, чтобы оставалась прибыль и покрывались комиссии.
+const MODES = [
+  {
+    id: "txt2img",
+    title: "🖌️ Нарисовать по тексту",
+    sub: "Обычная генерация по описанию (быстро и недорого).",
+    desc: "Напиши промпт: что нарисовать, стиль, детали, свет, качество.",
+    price: "4 cr.",
+    model: "SD 3.5 Flash",
+    needsImage: false,
+    img: "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=1200&q=70"
+  },
+  {
+    id: "edit",
+    title: "🧩 Редактировать картинку",
+    sub: "Поменять стиль/детали на своей картинке по промпту.",
+    desc: "Загрузи картинку из галереи и напиши, что изменить (стиль, детали, фон, объекты).",
+    price: "8 cr.",
+    model: "SD 3.5 (Image Edit)",
+    needsImage: true,
+    img: "https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=1200&q=70"
+  },
+  {
+    id: "style",
+    title: "✨ Перенос стиля",
+    sub: "Сделать картинку в нужном визуальном стиле (выраженный эффект).",
+    desc: "Загрузи картинку и напиши стиль: «аниме», «киберпанк», «масло», «3d», и т.д.",
+    price: "12 cr.",
+    model: "Style Transfer",
+    needsImage: true,
+    img: "https://images.unsplash.com/photo-1496307653780-42ee777d4833?auto=format&fit=crop&w=1200&q=70"
   }
+];
+
+let currentMode = MODES[0];
+let selectedFile = null;
+
+// ===== helpers =====
+function isInside(el, target){
+  if (!el || !target) return false;
+  return el === target || el.contains(target);
 }
 
-// ===== gallery UI =====
+function hideKeyboard(){
+  if (promptEl) promptEl.blur();
+}
+
+// скрыть клавиатуру при тапе по зоне (вне textarea/кнопок/превью)
+if (chatZone) {
+  chatZone.addEventListener("pointerdown", (e) => {
+    const t = e.target;
+
+    const safe =
+      isInside(promptEl, t) ||
+      isInside(galleryBtn, t) ||
+      isInside(genBtn, t) ||
+      isInside(removeImgBtn, t) ||
+      isInside(fileInput, t) ||
+      isInside(previewWrap, t) ||
+      isInside(modeList, t) ||
+      isInside(changeModeBtn, t) ||
+      isInside(againBtn, t);
+
+    if (!safe) hideKeyboard();
+  });
+}
+
+// ===== gallery preview =====
 function setPreview(file){
   selectedFile = file || null;
 
@@ -214,118 +165,166 @@ if (removeImgBtn && fileInput) {
   });
 }
 
-// ===== hide keyboard when tap on “chat zone” =====
-function isInside(el, target){
-  if (!el || !target) return false;
-  return el === target || el.contains(target);
+// ===== UI: screens =====
+function showScreen(which){
+  const isPick = which === "pick";
+
+  if (screenPick) {
+    screenPick.classList.toggle("screenActive", isPick);
+    screenPick.classList.toggle("screenLeave", !isPick);
+    screenPick.setAttribute("aria-hidden", String(!isPick));
+  }
+  if (screenGen) {
+    screenGen.classList.toggle("screenActive", !isPick);
+    screenGen.classList.toggle("screenLeave", isPick);
+    screenGen.setAttribute("aria-hidden", String(isPick));
+  }
+
+  // мягкая прокрутка в начало при переключении
+  if (chatZone) chatZone.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function hideKeyboard(){
-  if (promptEl) promptEl.blur();
+function applyMode(m){
+  currentMode = m;
+
+  if (modeTitle) modeTitle.textContent = m.title.replace(/^[^ ]+ /, ""); // без эмодзи в заголовке
+  if (modeDesc)  modeDesc.textContent  = m.desc;
+  if (modePrice) modePrice.textContent = m.price;
+  if (modeModel) modeModel.textContent = m.model;
+
+  // если режим не требует картинку — убираем галерею/превью
+  if (m.needsImage) {
+    if (galleryBtn) galleryBtn.hidden = false;
+    if (btnRow) btnRow.classList.remove("centerOnly");
+  } else {
+    if (galleryBtn) galleryBtn.hidden = true;
+    if (btnRow) btnRow.classList.add("centerOnly");
+    // сброс выбранной картинки
+    if (fileInput) fileInput.value = "";
+    setPreview(null);
+  }
+
+  // сброс результата при смене режима
+  resetToInput();
 }
 
-if (chatZone) {
-  chatZone.addEventListener("pointerdown", (e) => {
-    const t = e.target;
+function buildModeCards(){
+  if (!modeList) return;
+  modeList.innerHTML = "";
 
-    const safe =
-      isInside(promptEl, t) ||
-      isInside(galleryBtn, t) ||
-      isInside(removeImgBtn, t) ||
-      isInside(fileInput, t) ||
-      isInside(previewWrap, t) ||
-      isInside(changeModeBtn, t);
+  for (const m of MODES) {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "modeCard";
+    card.setAttribute("role", "listitem");
 
-    if (!safe) hideKeyboard();
-  });
-}
+    card.innerHTML = `
+      <div class="modeMedia" style="background-image:url('${m.img}')">
+        <div class="modeOverlay"></div>
+        <div class="modePrice">${m.price}</div>
+      </div>
+      <div class="modeBody">
+        <div class="modeTitle">${m.title}</div>
+        <div class="modeSub">${m.sub}</div>
+        <div class="modeOpen">Открыть →</div>
+      </div>
+    `;
 
-// ===== Generation states =====
-function resetToInputState(){
-  // show input + actions
-  if (actionsRow) actionsRow.hidden = false;
-  if (promptBox) promptBox.hidden = false;
+    card.addEventListener("click", () => {
+      applyMode(m);
+      showScreen("gen");
+    });
 
-  // hide loading/result
-  if (loadingBox) loadingBox.hidden = true;
-  if (result2) result2.hidden = true;
-  if (regenBtn) regenBtn.hidden = true;
-
-  // clear result image
-  if (outImg) outImg.src = "";
-}
-
-function showLoadingState(){
-  hideKeyboard();
-
-  if (actionsRow) actionsRow.hidden = true;
-  if (promptBox) promptBox.hidden = true;
-
-  if (result2) result2.hidden = true;
-  if (regenBtn) regenBtn.hidden = true;
-
-  if (loadingBox) loadingBox.hidden = false;
-}
-
-function showResultState(imgUrl){
-  if (loadingBox) loadingBox.hidden = true;
-
-  if (actionsRow) actionsRow.hidden = true;
-  if (promptBox) promptBox.hidden = true;
-
-  if (outImg) outImg.src = imgUrl;
-  if (result2) result2.hidden = false;
-  if (regenBtn) regenBtn.hidden = false;
-}
-
-// ===== Generate (пока имитация) =====
-function fakeGenerate(){
-  // чтобы выглядело реально — задержка + картинка
-  const demo = "https://images.unsplash.com/photo-1520975682042-09028f65f53a?auto=format&fit=crop&w=1200&q=80";
-  showLoadingState();
-  setTimeout(() => showResultState(demo), 1400);
-}
-
-if (genBtn) {
-  genBtn.addEventListener("click", () => {
-    const prompt = (promptEl?.value || "").trim();
-    // можно разрешить без текста, но лучше так:
-    if (!prompt && !selectedFile) {
-      tg?.showToast?.("Напиши промпт или выбери картинку");
-      if (!tg?.showToast) alert("Напиши промпт или выбери картинку");
-      return;
-    }
-    fakeGenerate();
-  });
-}
-
-if (regenBtn) {
-  regenBtn.addEventListener("click", () => {
-    resetToInputState();
-    // не очищаем промпт/превью — пользователь может поправить
-  });
+    modeList.appendChild(card);
+  }
 }
 
 if (changeModeBtn) {
-  changeModeBtn.addEventListener("click", () => {
-    document.body.classList.add("fadeSwap");
-    setTimeout(() => {
-      document.body.classList.remove("fadeSwap");
-      showModeList();
-    }, 220);
+  changeModeBtn.addEventListener("click", () => showScreen("pick"));
+}
+
+// ===== generation states =====
+function setLoading(on){
+  if (loading) loading.hidden = !on;
+
+  // во время загрузки — прячем ввод и показываем только loader в result
+  if (inputBlock) inputBlock.hidden = on;
+  if (bottomRow) bottomRow.hidden = true;
+
+  // placeholder / output
+  if (placeholder) placeholder.hidden = on;
+  if (outImg) outImg.hidden = true;
+}
+
+function showResultImage(src){
+  if (!src) return;
+
+  if (loading) loading.hidden = true;
+  if (placeholder) placeholder.hidden = true;
+
+  if (outImg) {
+    outImg.src = src;
+    outImg.hidden = false;
+  }
+
+  if (bottomRow) bottomRow.hidden = false;
+  if (inputBlock) inputBlock.hidden = true;
+}
+
+function resetToInput(){
+  if (loading) loading.hidden = true;
+  if (placeholder) {
+    placeholder.textContent = "Здесь появится результат";
+    placeholder.hidden = false;
+  }
+  if (outImg) {
+    outImg.hidden = true;
+    outImg.src = "";
+  }
+
+  if (inputBlock) inputBlock.hidden = false;
+  if (bottomRow) bottomRow.hidden = true;
+}
+
+if (againBtn) {
+  againBtn.addEventListener("click", () => {
+    resetToInput();
+    if (promptEl) promptEl.focus();
   });
+}
+
+// ===== generate (пока демо, без API) =====
+function fakeGenerate(){
+  const prompt = (promptEl?.value || "").trim();
+
+  // если режим требует картинку — она должна быть выбрана
+  if (currentMode.needsImage && !selectedFile) {
+    alert("Сначала выбери картинку в Галерее.");
+    return;
+  }
+
+  if (!prompt) {
+    alert("Напиши промпт.");
+    return;
+  }
+
+  setLoading(true);
+
+  // демо-результат: картинка по seed (чтобы каждый раз было похоже, но разное)
+  const seed = encodeURIComponent(currentMode.id + "-" + prompt.slice(0, 40));
+  const demoUrl = "https://picsum.photos/seed/" + seed + "/1024/768";
+
+  // имитация ожидания
+  setTimeout(() => {
+    showResultImage(demoUrl);
+  }, 1400);
+}
+
+if (genBtn) {
+  genBtn.addEventListener("click", fakeGenerate);
 }
 
 // ===== init =====
 buildModeCards();
-setCurrentMode(getSavedMode());
-
-// если открыли по прямой ссылке с ?mode=... можно сразу в генерацию
-const qpMode = url.searchParams.get("mode");
-if (qpMode && MODES.some(m => m.id === qpMode)) {
-  setCurrentMode(qpMode);
-  showGen();
-} else {
-  showModeList();
-}
-resetToInputState();
+applyMode(MODES[0]);
+showScreen("pick");
