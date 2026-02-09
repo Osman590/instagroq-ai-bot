@@ -1,1 +1,35 @@
- 
+/* docs/css/image-ui.css */
+
+.screen{display:none;padding:16px}
+.screen.active{display:block}
+
+.card{
+  display:flex;
+  gap:16px;
+  padding:18px;
+  margin-bottom:16px;
+  border-radius:20px;
+  background:rgba(255,255,255,.12);
+}
+
+.preview{
+  width:90px;
+  height:90px;
+  border-radius:16px;
+  background:linear-gradient(135deg,#6daaff,#3b4cff);
+}
+
+.info{flex:1}
+.title{font-size:15px;font-weight:600}
+.desc{font-size:12px;opacity:.7;margin-top:4px}
+.price{margin-top:8px}
+
+.center{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  height:100%;
+}
+
+.hidden{display:none}
