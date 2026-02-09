@@ -1,26 +1,38 @@
-.screen{display:none;padding:16px}
-.screen.active{display:block}
+.screen{
+  display:none;
+  padding:16px;
+}
+.screen.active{
+  display:block;
+}
 
+/* горизонтальный скролл */
 .cardScroll{
   overflow-x:auto;
-  padding-bottom:10px;
+  padding-bottom:14px;
 }
 
 .cardRow{
   display:flex;
-  gap:14px;
+  gap:16px;
 }
 
+/* КАРТОЧКА */
 .modeCard{
-  flex:0 0 240px;
+  flex:0 0 260px;              /* ширина карточки */
+  height:360px;                /* ❗ увеличили длину */
   background:rgba(255,255,255,.12);
-  border-radius:20px;
+  border-radius:22px;
   overflow:hidden;
-  box-shadow:0 12px 26px rgba(0,0,0,.25);
+  box-shadow:0 14px 30px rgba(0,0,0,.28);
+  display:flex;
+  flex-direction:column;
 }
 
+/* КАРТИНКА */
 .modeImg{
-  height:140px;
+  height:200px;                /* ❗ картинка выше */
+  flex-shrink:0;
 }
 
 .modeImg img{
@@ -29,8 +41,13 @@
   object-fit:cover;
 }
 
+/* НИЗ КАРТОЧКИ */
 .modeBody{
-  padding:12px;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  flex:1;
 }
 
 .modeTitle{
@@ -40,14 +57,18 @@
 
 .modeDesc{
   font-size:12px;
-  opacity:.7;
-  margin-top:4px;
+  opacity:.75;
+  line-height:1.3;
 }
 
+/* ЦЕНА */
 .modePrice{
-  margin-top:10px;
+  margin-top:auto;
   font-weight:800;
+  font-size:15px;
   color:#ffd966;
 }
 
-.hidden{display:none}
+.hidden{
+  display:none;
+}
