@@ -1,16 +1,12 @@
-// docs/js/image-page.js
-
 import { getModes, setMode, getMode, setFile, getFile, resetState } from "./image.js";
 
-// ===== Telegram / VH =====
 const tg = window.Telegram?.WebApp;
 
 function applyVH(){
-  if (tg && typeof tg.viewportHeight === "number") {
-    document.documentElement.style.setProperty("--vh", tg.viewportHeight + "px");
-  } else {
-    document.documentElement.style.setProperty("--vh", window.innerHeight + "px");
-  }
+  document.documentElement.style.setProperty(
+    "--vh",
+    (tg?.viewportHeight || window.innerHeight) + "px"
+  );
 }
 
 if (tg) {
@@ -18,18 +14,12 @@ if (tg) {
   tg.expand();
   applyVH();
   tg.onEvent("viewportChanged", applyVH);
-} else {
-  applyVH();
-  window.addEventListener("resize", applyVH);
 }
 
-// ===== DOM =====
 const screenPick = document.getElementById("screenPick");
-const screenGen  = document.getElementById("screenGen");
-
+const screenGen = document.getElementById("screenGen");
 const modeList = document.getElementById("modeList");
 const modeName = document.getElementById("modeName");
-const changeModeBtn = document.getElementById("changeModeBtn");
 
 const fileInput = document.getElementById("fileInput");
 const pickFileBtn = document.getElementById("pickFileBtn");
@@ -38,10 +28,8 @@ const previewImg = document.getElementById("previewImg");
 const removeImgBtn = document.getElementById("removeImgBtn");
 
 const genBtn = document.getElementById("genBtn");
-const loading = document.getElementById("loading");
-const out = document.getElementById("out");
+const changeModeBtn = document.getElementById("changeModeBtn");
 
-// ===== helpers =====
 function showPick(){
   screenPick.classList.add("active");
   screenGen.classList.remove("active");
@@ -54,72 +42,55 @@ function showGen(){
 
 function buildModes(){
   modeList.innerHTML = "";
-  const modes = getModes();
 
-  for (const m of modes){
+  for (const m of getModes()) {
     const card = document.createElement("div");
-    card.className = "card";
+    card.className = "modeCard";
+
     card.innerHTML = `
-      <div class="info">
-        <div class="title">${m.title}</div>
-        <div class="desc">${m.desc}</div>
+      <div class="modeImg">
+        <img src="${m.image}">
+      </div>
+      <div class="modeBody">
+        <div class="modeTitle">${m.title}</div>
+        <div class="modeDesc">${m.desc}</div>
+        <div class="modePrice">${m.price} ⭐</div>
       </div>
     `;
-    card.addEventListener("click", () => {
+
+    card.onclick = () => {
       setMode(m.id);
       modeName.textContent = m.title;
       showGen();
-    });
+    };
+
     modeList.appendChild(card);
   }
 }
 
-function updatePreview(){
-  const file = getFile();
-  if (!file){
-    previewWrap.classList.add("hidden");
-    previewImg.src = "";
-    return;
-  }
-  const url = URL.createObjectURL(file);
-  previewImg.src = url;
-  previewWrap.classList.remove("hidden");
-}
+pickFileBtn.onclick = () => fileInput.click();
 
-// ===== events =====
-changeModeBtn.addEventListener("click", () => {
+fileInput.onchange = () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+  setFile(file);
+  previewImg.src = URL.createObjectURL(file);
+  previewWrap.classList.remove("hidden");
+};
+
+removeImgBtn.onclick = () => {
+  setFile(null);
+  previewWrap.classList.add("hidden");
+};
+
+changeModeBtn.onclick = () => {
   resetState();
   showPick();
-});
+};
 
-pickFileBtn.addEventListener("click", () => {
-  fileInput.click();
-});
+genBtn.onclick = () => {
+  alert("Генерация будет подключена на следующем шаге");
+};
 
-fileInput.addEventListener("change", () => {
-  const f = fileInput.files?.[0];
-  if (!f) return;
-  setFile(f);
-  updatePreview();
-});
-
-removeImgBtn.addEventListener("click", () => {
-  setFile(null);
-  fileInput.value = "";
-  updatePreview();
-});
-
-genBtn.addEventListener("click", () => {
-  // пока заглушка
-  loading.classList.remove("hidden");
-  out.classList.add("hidden");
-
-  setTimeout(() => {
-    loading.classList.add("hidden");
-    out.classList.remove("hidden");
-  }, 1200);
-});
-
-// ===== init =====
 buildModes();
 showPick();
