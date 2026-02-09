@@ -35,6 +35,9 @@ const langList = document.getElementById("langList");
 const langClose = document.getElementById("langClose");
 const langSheetTitle = document.getElementById("langSheetTitle");
 
+// ✅ ДОБАВЛЕНО: кнопка генерации
+const imgBtn = document.getElementById("imgBtn");
+
 // ✅ theme UI
 const themeBtn = document.getElementById("themeBtn");
 const themeOverlay = document.getElementById("themeOverlay");
@@ -93,18 +96,27 @@ function setChatLink(lang, theme){
     + "&theme=" + encodeURIComponent(theme);
 }
 
+// ✅ ДОБАВЛЕНО: ссылка для генерации
+function setImgLink(lang, theme){
+  if (!imgBtn) return;
+  const baseHref = "./image.html?v=1";
+  imgBtn.href = baseHref
+    + "&lang=" + encodeURIComponent(lang)
+    + "&theme=" + encodeURIComponent(theme);
+}
+
 // ===== i18n =====
 const I18N = {
-  ru: { btn:"Чат с ИИ", sub:"Быстрые ответы • Память • Заметки", ver:"miniapp v2", lang:"Язык интерфейса", sheet:"Язык" },
-  kk: { btn:"AI чат", sub:"Жылдам жауаптар • Есте сақтау • Жазбалар", ver:"miniapp v2", lang:"Тіл", sheet:"Тіл" },
-  en: { btn:"AI Chat", sub:"Fast replies • Memory • Notes", ver:"miniapp v2", lang:"Language", sheet:"Language" },
-  tr: { btn:"Yapay Zekâ Sohbet", sub:"Hızlı yanıtlar • Hafıza • Notlar", ver:"miniapp v2", lang:"Dil", sheet:"Dil" },
-  uz: { btn:"AI Chat", sub:"Tez javoblar • Xotira • Eslatmalar", ver:"miniapp v2", lang:"Til", sheet:"Til" },
-  ky: { btn:"AI чат", sub:"Тез жооптор • Эс тутум • Жазмалар", ver:"miniapp v2", lang:"Тил", sheet:"Тил" },
-  uk: { btn:"AI чат", sub:"Швидкі відповіді • Пам’ять • Нотатки", ver:"miniapp v2", lang:"Мова", sheet:"Мова" },
-  de: { btn:"KI-Chat", sub:"Schnelle Antworten • Speicher • Notizen", ver:"miniapp v2", lang:"Sprache", sheet:"Sprache" },
-  es: { btn:"Chat IA", sub:"Respuestas rápidas • Memoria • Notas", ver:"miniapp v2", lang:"Idioma", sheet:"Idioma" },
-  fr: { btn:"Chat IA", sub:"Réponses rapides • Mémoire • Notes", ver:"miniapp v2", lang:"Langue", sheet:"Langue" },
+  ru: { btn:"Чат с ИИ", img:"Генерация картинки", sub:"Быстрые ответы • Память • Заметки", ver:"miniapp v2", lang:"Язык интерфейса", sheet:"Язык" },
+  kk: { btn:"AI чат", img:"Сурет генерациясы", sub:"Жылдам жауаптар • Есте сақтау • Жазбалар", ver:"miniapp v2", lang:"Тіл", sheet:"Тіл" },
+  en: { btn:"AI Chat", img:"Image generation", sub:"Fast replies • Memory • Notes", ver:"miniapp v2", lang:"Language", sheet:"Language" },
+  tr: { btn:"Yapay Zekâ Sohbet", img:"Görsel üretimi", sub:"Hızlı yanıtlar • Hafıza • Notlar", ver:"miniapp v2", lang:"Dil", sheet:"Dil" },
+  uz: { btn:"AI Chat", img:"Rasm yaratish", sub:"Tez javoblar • Xotira • Eslatmalar", ver:"miniapp v2", lang:"Til", sheet:"Til" },
+  ky: { btn:"AI чат", img:"Сүрөт генерациясы", sub:"Тез жооптор • Эс тутум • Жазмалар", ver:"miniapp v2", lang:"Тил", sheet:"Тил" },
+  uk: { btn:"AI чат", img:"Генерація зображень", sub:"Швидкі відповіді • Пам’ять • Нотатки", ver:"miniapp v2", lang:"Мова", sheet:"Мова" },
+  de: { btn:"KI-Chat", img:"Bildgenerierung", sub:"Schnelle Antworten • Speicher • Notizen", ver:"miniapp v2", lang:"Sprache", sheet:"Sprache" },
+  es: { btn:"Chat IA", img:"Generación de imagen", sub:"Respuestas rápidas • Memoria • Notas", ver:"miniapp v2", lang:"Idioma", sheet:"Idioma" },
+  fr: { btn:"Chat IA", img:"Génération d'image", sub:"Réponses rapides • Mémoire • Notes", ver:"miniapp v2", lang:"Langue", sheet:"Langue" },
 };
 
 const LANGS = [
@@ -155,6 +167,10 @@ function setLang(lang){
   const t = I18N[lang] || I18N.ru;
 
   if (chatBtn) chatBtn.textContent = t.btn;
+
+  // ✅ ДОБАВЛЕНО: текст второй кнопки
+  if (imgBtn) imgBtn.textContent = t.img;
+
   if (subText) subText.textContent = t.sub;
   if (verText) verText.textContent = t.ver;
   if (langTitle) langTitle.textContent = t.lang;
@@ -167,6 +183,7 @@ function setLang(lang){
   paintSelectedLang(lang);
 
   setChatLink(lang, getSavedTheme());
+  setImgLink(lang, getSavedTheme());
 }
 
 function setTheme(theme){
@@ -177,6 +194,7 @@ function setTheme(theme){
   setPillLabel(themeBtn, "Цвет: " + themeLabel(theme));
 
   setChatLink(getSavedLang(), theme);
+  setImgLink(getSavedLang(), theme);
 }
 
 // ===== overlays =====
