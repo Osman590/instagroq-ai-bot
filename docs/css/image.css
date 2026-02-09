@@ -1,12 +1,30 @@
+/* docs/css/image.css */
+
 /* фикс: чтобы iOS не зумил при фокусе */
 textarea, input, button { font-size: 16px; }
 
-html, body{
-  height: 100%;
+body.pageIn{
+  animation: pageIn .28s ease both;
 }
-body{
-  height: var(--vh);
-  overflow: hidden; /* ✅ фикс “прыжков” при клавиатуре */
+body.pageOut{
+  animation: pageOut .26s ease both;
+}
+@keyframes pageIn{
+  from{ opacity:0; transform: translateY(10px); }
+  to{ opacity:1; transform: translateY(0); }
+}
+@keyframes pageOut{
+  from{ opacity:1; transform: translateY(0); }
+  to{ opacity:0; transform: translateY(10px); }
+}
+
+/* мягкая смена экранов внутри страницы */
+body.fadeSwap .imgCard{
+  animation: fadeSwap .22s ease both;
+}
+@keyframes fadeSwap{
+  from{ opacity:1; transform: translateY(0); }
+  to{ opacity:.2; transform: translateY(8px); }
 }
 
 /* верхняя панель */
@@ -41,7 +59,6 @@ body{
   padding-bottom: calc(16px + env(safe-area-inset-bottom));
   overflow: auto;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
 }
 
 .imgCard{
@@ -61,74 +78,6 @@ body{
   margin-bottom: 10px;
 }
 
-/* ====== MODE LIST (выбор режима) ====== */
-.modeList{
-  display: grid;
-  gap: 12px;
-}
-
-.modeCard{
-  width: 100%;
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 18px;
-  padding: 0;
-  overflow: hidden;
-  text-align: left;
-  color: rgba(255,255,255,.92);
-  background: rgba(255,255,255,.08);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-}
-
-.modeCover{
-  height: 130px;
-  background:
-    radial-gradient(120px 120px at 20% 30%, rgba(255,255,255,.22), transparent 60%),
-    radial-gradient(160px 160px at 70% 40%, rgba(255,255,255,.14), transparent 60%),
-    linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.10));
-}
-
-.modeBody{
-  padding: 12px 12px 14px 12px;
-}
-
-.modeTitle{
-  font-weight: 900;
-  font-size: 16px;
-  margin-bottom: 6px;
-}
-
-.modeDesc{
-  color: rgba(255,255,255,.72);
-  font-size: 13px;
-  line-height: 1.25;
-  margin-bottom: 10px;
-}
-
-.modeMeta{
-  display:flex;
-  align-items:center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.modeBadge{
-  font-size: 12px;
-  font-weight: 900;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(0,0,0,.18);
-  color: rgba(255,255,255,.9);
-}
-
-.modeGo{
-  font-size: 12px;
-  font-weight: 900;
-  color: rgba(255,255,255,.85);
-}
-
-/* ====== GENERATION UI ====== */
 .imgRow{
   display:flex;
   gap:10px;
@@ -207,25 +156,172 @@ body{
   outline: none;
 }
 
-.imgResult{
+/* ===== MODE LIST ===== */
+.modeList{
+  display:flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: calc(var(--vh) - 160px);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 2px;
+}
+
+.modeCard{
+  width: 100%;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.92);
+  text-align: left;
+}
+
+.modeCover{
+  height: 148px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.modeOverlay{
+  position:absolute; inset:0;
+  background: linear-gradient(180deg, rgba(0,0,0,.10) 0%, rgba(0,0,0,.55) 100%);
+}
+
+.modePrice{
+  position:absolute;
+  left: 12px;
+  bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.28);
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.modeBody{
+  padding: 12px 12px 12px;
+}
+
+.modeTitleRow{
+  display:flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.modeTitleText{
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.modeOpen{
+  font-weight: 900;
+  font-size: 13px;
+  color: rgba(210,230,255,.95);
+}
+
+.modeDesc{
+  margin-top: 6px;
+  color: rgba(255,255,255,.70);
+  font-size: 13px;
+}
+
+/* ===== GEN HEADER ===== */
+.genHeader{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.genHeaderLeft{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.genChip{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.16);
+  font-weight: 900;
+}
+.genChipPrice{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.16);
+  font-weight: 900;
+  color: rgba(255,255,255,.86);
+}
+.genChange{
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.92);
+  font-weight: 900;
+}
+
+/* ===== LOADING ===== */
+.imgLoading{
+  margin-top: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.18);
+  padding: 18px 14px;
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  justify-content:center;
+  gap: 10px;
+  min-height: 220px;
+}
+
+.loader{
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 3px solid rgba(255,255,255,.20);
+  border-top-color: rgba(255,255,255,.85);
+  animation: spin 0.85s linear infinite;
+}
+@keyframes spin{
+  to{ transform: rotate(360deg); }
+}
+.loadingText{
+  font-weight: 900;
+  color: rgba(255,255,255,.80);
+  font-size: 13px;
+}
+
+/* ===== RESULT ===== */
+.imgResult2{
   margin-top: 12px;
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid rgba(255,255,255,.10);
   background: rgba(0,0,0,.18);
-  min-height: 220px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
 }
-
-.imgPlaceholder{
-  color: rgba(255,255,255,.65);
-  font-size: 13px;
-}
-
 .imgOut{
   width: 100%;
   height: auto;
   display:block;
+}
+
+.regenBtn{
+  margin-top: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(180deg, var(--accent1) 0%, var(--accent2) 100%);
 }
