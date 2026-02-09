@@ -1,4 +1,3 @@
-<!-- docs/index.html -->
 <!doctype html>
 <html lang="ru">
 <head>
@@ -26,12 +25,10 @@
   <!-- ✅ FIX MENU: iOS Safari/WEBVIEW жесты (pinch/gesture) -->
   <script>
     (function(){
-      // iOS gesture events (some webviews still fire these)
       document.addEventListener("gesturestart", (e) => e.preventDefault(), { passive:false });
       document.addEventListener("gesturechange", (e) => e.preventDefault(), { passive:false });
       document.addEventListener("gestureend", (e) => e.preventDefault(), { passive:false });
 
-      // double-tap zoom prevention
       let lastTouchEnd = 0;
       document.addEventListener("touchend", (e) => {
         const now = Date.now();
@@ -47,19 +44,16 @@
 </head>
 
 <body>
-  <!-- ✅ КНОПКА ТЕМЫ (левый верх) -->
   <button class="themePill" id="themeBtn" type="button" aria-haspopup="dialog" aria-expanded="false">
     Цвет: Синий
     <span class="chev">▾</span>
   </button>
 
-  <!-- шары -->
   <div class="orb o1"></div>
   <div class="orb o2"></div>
   <div class="orb o3"></div>
   <div class="orb o4"></div>
 
-  <!-- ✅ МНОГО квадратиков (и все двигаются по-разному) -->
   <div class="cube f1" style="left:8%; top:10%"></div>
   <div class="cube f2" style="left:62%; top:8%; width:100px; height:100px"></div>
   <div class="cube small f3" style="left:78%; top:22%"></div>
@@ -83,10 +77,6 @@
   <div class="wrap">
     <div class="card">
       <a class="btn" id="chatBtn" href="./chat.html?v=2">Чат с ИИ</a>
-
-      <!-- ✅ НОВАЯ КНОПКА: генерация картинок (тема = автоматически, потому что класс btn) -->
-      <a class="btn" id="imgBtn" href="./image.html?v=1">🎨 Генерация картинок</a>
-
       <div class="sub" id="subText">Быстрые ответы • Память • Заметки</div>
       <div class="ver" id="verText">miniapp v2</div>
 
@@ -110,7 +100,6 @@
     </div>
   </div>
 
-  <!-- ✅ Bottom Sheet Theme -->
   <div class="themeOverlay" id="themeOverlay" aria-hidden="true">
     <div class="themeSheet" role="dialog" aria-modal="true" aria-label="Theme selector">
       <div class="themeSheetHeader">
