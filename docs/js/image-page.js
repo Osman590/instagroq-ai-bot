@@ -37,10 +37,7 @@ const loadingEl = document.getElementById("loading");
 const outEl = document.getElementById("out");
 const resultImg = document.getElementById("resultImg");
 
-/* =========================
-   UI helpers
-========================= */
-
+// ===== helpers =====
 function showPick(){
   screenPick.classList.add("active");
   screenGen.classList.remove("active");
@@ -52,7 +49,19 @@ function showGen(){
 }
 
 function modeNeedsFile(modeId){
+  // txt2img — без фото, всё остальное требует входную картинку
   return modeId !== "txt2img";
+}
+
+function ensureHiddenWrap(el, hide){
+  if (!el) return;
+  if (hide) {
+    el.classList.add("hidden");
+    el.style.display = "none";     // ✅ чтобы не оставался “квадрат”
+  } else {
+    el.classList.remove("hidden");
+    el.style.display = "";         // вернуть как было
+  }
 }
 
 function syncRemoveButton(){
@@ -60,37 +69,170 @@ function syncRemoveButton(){
   const file = getFile();
 
   if (modeId === "txt2img") {
-    removeImgBtn.classList.add("hidden");
+    ensureHiddenWrap(removeImgBtn, true);
     return;
   }
-
-  file ? removeImgBtn.classList.remove("hidden")
-       : removeImgBtn.classList.add("hidden");
+  ensureHiddenWrap(removeImgBtn, !file);
 }
 
-function syncGenUIForMode(){
+function resetResult(){
+  if (resultImg) resultImg.removeAttribute("src");
+  outEl.classList.add("hidden");
+}
+
+function setGeneratingUI(isGen){
+  // когда генерируем — прячем ВСЁ, оставляем только loading
   const modeId = getMode()?.id || "";
   const needFile = modeNeedsFile(modeId);
 
+  if (isGen) {
+    if (promptEl) promptEl.style.display = "none";
+    if (genBtn) genBtn.style.display = "none";
+    if (changeModeBtn) changeModeBtn.style.display = "none";
+    if (pickFileBtn) pickFileBtn.style.display = "none";
+    if (previewWrap) ensureHiddenWrap(previewWrap, true);
+    if (removeImgBtn) ensureHiddenWrap(removeImgBtn, true);
+    loadingEl.classList.remove("hidden");
+    outEl.classList.add("hidden");
+    return;
+  }
+
+  // когда НЕ генерируем — показываем нужные элементы по режиму
+  if (promptEl) promptEl.style.display = "";
+  if (genBtn) genBtn.style.display = "";
+  if (changeModeBtn) changeModeBtn.style.display = "";
+
+  if (pickFileBtn) pickFileBtn.style.display = needFile ? "" : "none";
+
+  const file = getFile();
+  if (needFile && file) ensureHiddenWrap(previewWrap, false);
+  else ensureHiddenWrap(previewWrap, true);
+
+  syncRemoveButton();
+
+  loadingEl.classList.add("hidden");
+}
+
+function syncGenUIForMode(){
+  const m = getMode();
+  const modeId = m?.id || "";
+  const needFile = modeNeedsFile(modeId);
+
+  // показать/скрыть выбор фото по режиму
   pickFileBtn.style.display = needFile ? "" : "none";
 
+  // txt2img — убираем фото и превью
   if (!needFile) {
     setFile(null);
-    previewWrap.classList.add("hidden");
+    if (previewImg) previewImg.removeAttribute("src");
+    ensureHiddenWrap(previewWrap, true);
     fileInput.value = "";
   }
 
+  // сброс результата при переключении режима
   loadingEl.classList.add("hidden");
-  outEl.classList.add("hidden");
-  if (resultImg) resultImg.removeAttribute("src");
+  resetResult();
+
+  // “Удалить” — только когда реально есть файл и режим требует файл
+  syncRemoveButton();
+
+  // вернуть обычный UI (не режим генерации)
+  setGeneratingUI(false);
+}
+
+// ===== UI: loading panel + buttons (создаём, если их нет в HTML) =====
+function ensureLoadingPanel(){
+  if (!loadingEl) return { timeEl: null, textEl: null };
+
+  let panel = loadingEl.querySelector(".genPanel");
+  if (!panel) {
+    loadingEl.innerHTML = `
+      <div class="genPanel">
+        <div class="genSpinner" aria-hidden="true"></div>
+        <div class="genText">Генерация...</div>
+        <div class="genTime">~ <span class="genEta">--</span> сек</div>
+      </div>
+    `;
+    panel = loadingEl.querySelector(".genPanel");
+  }
+
+  return {
+    etaEl: loadingEl.querySelector(".genEta"),
+    textEl: loadingEl.querySelector(".genText"),
+  };
+}
+
+function ensureResultButtons(){
+  if (!outEl) return { saveBtn: null, retryBtn: null };
+
+  let btnRow = outEl.querySelector(".genBtnRow");
+  if (!btnRow) {
+    btnRow = document.createElement("div");
+    btnRow.className = "genBtnRow";
+
+    const save = document.createElement("button");
+    save.type = "button";
+    save.className = "genBtn genBtnSave";
+    save.textContent = "Сохранить";
+
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "genBtn genBtnRetry";
+    retry.textContent = "Повторить";
+
+    btnRow.appendChild(save);
+    btnRow.appendChild(retry);
+    outEl.appendChild(btnRow);
+  }
+
+  return {
+    saveBtn: outEl.querySelector(".genBtnSave"),
+    retryBtn: outEl.querySelector(".genBtnRetry"),
+  };
+}
+
+function saveImage(src){
+  if (!src) return;
+
+  // если есть tg — открываем ссылку (на iOS это самый стабильный вариант)
+  if (tg && typeof tg.openLink === "function") {
+    tg.openLink(src);
+    return;
+  }
+
+  // иначе пытаемся скачать через <a>
+  const a = document.createElement("a");
+  a.href = src;
+  a.target = "_blank";
+  a.rel = "noopener";
+  a.download = "image.png";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function showNormalFormAfterResult(){
+  // убрать результат и кнопки, вернуть форму
+  resetResult();
+
+  // вернуть UI по текущему режиму
+  const modeId = getMode()?.id || "";
+  const needFile = modeNeedsFile(modeId);
+
+  if (promptEl) promptEl.style.display = "";
+  if (genBtn) genBtn.style.display = "";
+  if (changeModeBtn) changeModeBtn.style.display = "";
+
+  if (pickFileBtn) pickFileBtn.style.display = needFile ? "" : "none";
+
+  const file = getFile();
+  if (needFile && file) ensureHiddenWrap(previewWrap, false);
+  else ensureHiddenWrap(previewWrap, true);
 
   syncRemoveButton();
 }
 
-/* =========================
-   BUILD MODES
-========================= */
-
+// ===== modes list =====
 function buildModes(){
   modeList.innerHTML = "";
 
@@ -100,7 +242,7 @@ function buildModes(){
 
     card.innerHTML = `
       <div class="modeImg">
-        <div class="imgLoader"></div>
+        <div class="imgLoader" aria-hidden="true"></div>
         <img src="${m.image}" alt="">
       </div>
       <div class="modeBody">
@@ -111,10 +253,18 @@ function buildModes(){
     `;
 
     const imgWrap = card.querySelector(".modeImg");
-    const img = card.querySelector("img");
+    const img = card.querySelector(".modeImg img");
 
-    img.onload = () => imgWrap.classList.add("loaded");
-    img.onerror = () => imgWrap.classList.add("error");
+    const markLoaded = () => imgWrap.classList.add("loaded");
+    const markError = () => imgWrap.classList.add("error");
+
+    img.addEventListener("load", markLoaded, { once: true });
+    img.addEventListener("error", markError, { once: true });
+
+    if (img.complete) {
+      if (img.naturalWidth > 0) markLoaded();
+      else markError();
+    }
 
     card.onclick = () => {
       setMode(m.id);
@@ -127,110 +277,171 @@ function buildModes(){
   }
 }
 
-/* =========================
-   FILE HANDLING
-========================= */
-
+// ===== file pick/remove =====
 pickFileBtn.onclick = () => fileInput.click();
 
 fileInput.onchange = () => {
   const file = fileInput.files[0];
   if (!file) return;
-
   setFile(file);
   previewImg.src = URL.createObjectURL(file);
-  previewWrap.classList.remove("hidden");
-
+  ensureHiddenWrap(previewWrap, false);
   syncRemoveButton();
 };
 
 removeImgBtn.onclick = () => {
-  // ✅ ПОЛНОСТЬЮ очищаем всё
+  // ✅ полностью убрать “квадрат” превью и файл
   setFile(null);
-  previewImg.removeAttribute("src");
-  previewWrap.classList.add("hidden");
+  if (previewImg) previewImg.removeAttribute("src");
   fileInput.value = "";
-
-  if (resultImg) resultImg.removeAttribute("src");
-  outEl.classList.add("hidden");
-
+  ensureHiddenWrap(previewWrap, true);
   syncRemoveButton();
 };
 
-/* =========================
-   CHANGE MODE
-========================= */
-
+// ===== change mode =====
 changeModeBtn.onclick = () => {
   resetState();
 
-  promptEl.value = "";
+  // сброс UI
+  if (promptEl) promptEl.value = "";
   setFile(null);
-  previewImg.removeAttribute("src");
-  previewWrap.classList.add("hidden");
+
+  if (previewImg) previewImg.removeAttribute("src");
   fileInput.value = "";
+  ensureHiddenWrap(previewWrap, true);
 
   loadingEl.classList.add("hidden");
-  outEl.classList.add("hidden");
-  if (resultImg) resultImg.removeAttribute("src");
+  resetResult();
+  syncRemoveButton();
 
   showPick();
 };
 
-/* =========================
-   GENERATE
-========================= */
+// ===== keyboard UX =====
+// закрывать клавиатуру при тапе вне инпута/кнопок
+screenGen.addEventListener("pointerdown", (e) => {
+  if (!promptEl) return;
 
+  const t = e.target;
+  const isInsideInput = (t === promptEl) || (promptEl.contains && promptEl.contains(t));
+  if (isInsideInput) return;
+
+  // если тап по кнопкам — не мешаем
+  if (t === genBtn || t === pickFileBtn || t === removeImgBtn || t === changeModeBtn) return;
+
+  promptEl.blur();
+});
+
+// при фокусе — поднять экран, чтобы поле было видно
+if (promptEl) {
+  promptEl.addEventListener("focus", () => {
+    setTimeout(() => {
+      promptEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 350);
+  });
+}
+
+// ===== generate =====
 genBtn.onclick = async () => {
-  const modeId = getMode()?.id || "";
-  const prompt = promptEl.value.trim();
+  const m = getMode();
+  const modeId = m?.id || "";
+  if (!modeId) {
+    alert("Сначала выбери функцию");
+    return;
+  }
+
+  const prompt = (promptEl?.value || "").trim();
   const file = getFile();
 
-  if (!modeId) return alert("Сначала выбери функцию");
-  if (modeNeedsFile(modeId) && !file) return alert("Выбери изображение");
-  if (modeId === "txt2img" && !prompt) return alert("Напиши описание");
+  if (modeNeedsFile(modeId) && !file) {
+    alert("Для этой функции нужно выбрать фото");
+    return;
+  }
+  if (modeId === "txt2img" && !prompt) {
+    alert("Напиши описание для генерации");
+    return;
+  }
 
-  loadingEl.classList.remove("hidden");
-  outEl.classList.add("hidden");
+  // ===== UI: показать только квадратный лоадинг-панель =====
+  promptEl.blur();
+  setGeneratingUI(true);
   genBtn.disabled = true;
 
-  try {
-    const res = await generateImage({ prompt, mode: modeId, file });
-    const src = res?.image_base64 || res?.image_url || "";
+  const { etaEl, textEl } = ensureLoadingPanel();
 
-    if (!src) throw new Error();
+  // таймер (если API не отдаёт ETA — показываем условные 20 сек)
+  let secondsLeft = 20;
+  let timerId = null;
+
+  const startTimer = () => {
+    if (!etaEl) return;
+    etaEl.textContent = String(secondsLeft);
+    timerId = setInterval(() => {
+      secondsLeft = Math.max(0, secondsLeft - 1);
+      etaEl.textContent = String(secondsLeft);
+      if (secondsLeft <= 0) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+    }, 1000);
+  };
+
+  startTimer();
+
+  try {
+    if (textEl) textEl.textContent = "Генерация...";
+
+    const res = await generateImage({ prompt, mode: modeId, file });
+
+    // если API вернул ETA — подстроимся
+    const etaFromApi = Number(res?.eta_seconds || res?.eta || 0);
+    if (etaFromApi > 0 && etaEl) {
+      secondsLeft = Math.min(999, Math.round(etaFromApi));
+      etaEl.textContent = String(secondsLeft);
+    }
+
+    const url = res?.image_url || res?.url || "";
+    const b64 = res?.image_base64 || res?.base64 || "";
+    const src = b64 || url;
+
+    if (!src) throw new Error("no_image_in_response");
+
+    // показать результат + кнопки
+    if (timerId) { clearInterval(timerId); timerId = null; }
+
+    loadingEl.classList.add("hidden");
 
     resultImg.src = src;
-    loadingEl.classList.add("hidden");
     outEl.classList.remove("hidden");
-  } catch {
-    alert("Ошибка генерации");
+
+    const { saveBtn, retryBtn } = ensureResultButtons();
+
+    if (saveBtn) {
+      saveBtn.onclick = () => saveImage(src);
+    }
+    if (retryBtn) {
+      retryBtn.onclick = () => {
+        // убрать картинку и кнопки, вернуть форму
+        if (resultImg) resultImg.removeAttribute("src");
+
+        // спрятать кнопки (ряд)
+        const row = outEl.querySelector(".genBtnRow");
+        if (row) row.remove();
+
+        showNormalFormAfterResult();
+      };
+    }
+
+  } catch (e) {
+    if (timerId) { clearInterval(timerId); timerId = null; }
     loadingEl.classList.add("hidden");
+    resetResult();
+    setGeneratingUI(false);
+    alert("Ошибка генерации");
   } finally {
     genBtn.disabled = false;
   }
 };
-
-/* =========================
-   KEYBOARD UX (ВАЖНО)
-========================= */
-
-/* ✅ закрывать клавиатуру при тапе вне input */
-screenGen.addEventListener("click", (e) => {
-  if (e.target !== promptEl) {
-    promptEl.blur();
-  }
-});
-
-/* ✅ при фокусе — прокрутить вверх */
-promptEl.addEventListener("focus", () => {
-  setTimeout(() => {
-    promptEl.scrollIntoView({
-      behavior: "smooth",
-      block: "center"
-    });
-  }, 300);
-});
 
 buildModes();
 showPick();
