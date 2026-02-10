@@ -1,15 +1,16 @@
+// docs/js/image-page.js
 import { getModes, setMode, getMode, setFile, getFile, resetState } from "./image.js";
 import { generateImage } from "./image-api.js";
 
 const tg = window.Telegram?.WebApp;
 
-// ===== vh =====
 function applyVH(){
   document.documentElement.style.setProperty(
     "--vh",
     (tg?.viewportHeight || window.innerHeight) + "px"
   );
 }
+
 if (tg) {
   tg.ready();
   tg.expand();
@@ -17,90 +18,133 @@ if (tg) {
   tg.onEvent("viewportChanged", applyVH);
 }
 
-// ===== elements =====
 const screenPick = document.getElementById("screenPick");
-const screenGen  = document.getElementById("screenGen");
-const modeList  = document.getElementById("modeList");
-const modeName  = document.getElementById("modeName");
+const screenGen = document.getElementById("screenGen");
+const modeList = document.getElementById("modeList");
+const modeName = document.getElementById("modeName");
 
-const fileInput    = document.getElementById("fileInput");
-const pickFileBtn  = document.getElementById("pickFileBtn");
-const previewWrap  = document.getElementById("previewWrap");
-const previewImg   = document.getElementById("previewImg");
+const fileInput = document.getElementById("fileInput");
+const pickFileBtn = document.getElementById("pickFileBtn");
+const previewWrap = document.getElementById("previewWrap");
+const previewImg = document.getElementById("previewImg");
 const removeImgBtn = document.getElementById("removeImgBtn");
 
-const promptEl  = document.getElementById("prompt");
-const genBtn    = document.getElementById("genBtn");
+const genBtn = document.getElementById("genBtn");
 const changeModeBtn = document.getElementById("changeModeBtn");
 
+const promptEl = document.getElementById("prompt");
 const loadingEl = document.getElementById("loading");
-const outEl     = document.getElementById("out");
+const outEl = document.getElementById("out");
 const resultImg = document.getElementById("resultImg");
-const genStage  = document.getElementById("genStage");
 
 // ===== helpers =====
-const showPick = () => {
-  screenPick.classList.add("active");
-  screenGen.classList.remove("active");
-};
+function showPick(){
+  requestAnimationFrame(() => {
+    screenPick.classList.add("active");
+    screenGen.classList.remove("active");
+  });
+}
 
-const showGen = () => {
-  screenPick.classList.remove("active");
-  screenGen.classList.add("active");
-};
+function showGen(){
+  requestAnimationFrame(() => {
+    screenPick.classList.remove("active");
+    screenGen.classList.add("active");
+  });
+}
 
-const modeNeedsFile = (id) => id !== "txt2img";
+function modeNeedsFile(modeId){
+  return modeId !== "txt2img";
+}
 
-const hide = (el) => {
+function ensureHiddenWrap(el, hide){
   if (!el) return;
-  el.classList.add("hidden");
-  el.style.display = "none";
-};
-
-const show = (el) => {
-  if (!el) return;
-  el.classList.remove("hidden");
-  el.style.display = "";
-};
-
-const syncRemoveBtn = () => {
-  const m = getMode()?.id;
-  const file = getFile();
-  if (m === "txt2img" || !file) hide(removeImgBtn);
-  else show(removeImgBtn);
-};
-
-const resetResult = () => {
-  if (resultImg) resultImg.removeAttribute("src");
-  hide(outEl);
-};
-
-const setGeneratingUI = (on) => {
-  if (on) {
-    hide(promptEl);
-    hide(genBtn);
-    hide(changeModeBtn);
-    hide(pickFileBtn);
-    hide(previewWrap);
-    hide(removeImgBtn);
-
-    genStage.classList.add("is-loading");
-    genStage.classList.remove("is-result");
-
-    show(loadingEl);
-    hide(outEl);
+  if (hide) {
+    el.classList.add("hidden");
+    el.style.display = "none";
   } else {
-    hide(loadingEl);
+    el.classList.remove("hidden");
+    el.style.display = "";
   }
-};
+}
 
-// ===== modes =====
+function syncRemoveButton(){
+  const modeId = getMode()?.id || "";
+  const file = getFile();
+
+  if (modeId === "txt2img") {
+    ensureHiddenWrap(removeImgBtn, true);
+    return;
+  }
+  ensureHiddenWrap(removeImgBtn, !file);
+}
+
+function resetResult(){
+  if (resultImg) resultImg.removeAttribute("src");
+  outEl.classList.add("hidden");
+}
+
+function setGeneratingUI(isGen){
+  const modeId = getMode()?.id || "";
+  const needFile = modeNeedsFile(modeId);
+
+  if (isGen) {
+    if (promptEl) promptEl.style.display = "none";
+    if (genBtn) genBtn.style.display = "none";
+    if (changeModeBtn) changeModeBtn.style.display = "none";
+    if (pickFileBtn) pickFileBtn.style.display = "none";
+    if (previewWrap) ensureHiddenWrap(previewWrap, true);
+    if (removeImgBtn) ensureHiddenWrap(removeImgBtn, true);
+
+    loadingEl.classList.remove("hidden");
+    outEl.classList.add("hidden");
+
+    // 🔹 панель генерации всегда в том же месте
+    loadingEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  if (promptEl) promptEl.style.display = "";
+  if (genBtn) genBtn.style.display = "";
+  if (changeModeBtn) changeModeBtn.style.display = "";
+
+  if (pickFileBtn) pickFileBtn.style.display = needFile ? "" : "none";
+
+  const file = getFile();
+  if (needFile && file) ensureHiddenWrap(previewWrap, false);
+  else ensureHiddenWrap(previewWrap, true);
+
+  syncRemoveButton();
+  loadingEl.classList.add("hidden");
+}
+
+function syncGenUIForMode(){
+  const m = getMode();
+  const modeId = m?.id || "";
+  const needFile = modeNeedsFile(modeId);
+
+  pickFileBtn.style.display = needFile ? "" : "none";
+
+  if (!needFile) {
+    setFile(null);
+    if (previewImg) previewImg.removeAttribute("src");
+    ensureHiddenWrap(previewWrap, true);
+    fileInput.value = "";
+  }
+
+  loadingEl.classList.add("hidden");
+  resetResult();
+  syncRemoveButton();
+  setGeneratingUI(false);
+}
+
+// ===== modes list =====
 function buildModes(){
   modeList.innerHTML = "";
 
   for (const m of getModes()) {
     const card = document.createElement("div");
     card.className = "modeCard";
+
     card.innerHTML = `
       <div class="modeImg">
         <div class="imgLoader"></div>
@@ -113,17 +157,16 @@ function buildModes(){
       </div>
     `;
 
+    const imgWrap = card.querySelector(".modeImg");
     const img = card.querySelector("img");
-    const wrap = card.querySelector(".modeImg");
 
-    img.onload  = () => wrap.classList.add("loaded");
-    img.onerror = () => wrap.classList.add("error");
+    img.onload = () => imgWrap.classList.add("loaded");
+    img.onerror = () => imgWrap.classList.add("error");
 
     card.onclick = () => {
       setMode(m.id);
       modeName.textContent = m.title;
-      resetResult();
-      syncRemoveBtn();
+      syncGenUIForMode();
       showGen();
     };
 
@@ -131,81 +174,74 @@ function buildModes(){
   }
 }
 
-// ===== file =====
+// ===== file pick/remove =====
 pickFileBtn.onclick = () => fileInput.click();
 
 fileInput.onchange = () => {
-  const f = fileInput.files[0];
-  if (!f) return;
-  setFile(f);
-  previewImg.src = URL.createObjectURL(f);
-  show(previewWrap);
-  syncRemoveBtn();
+  const file = fileInput.files[0];
+  if (!file) return;
+  setFile(file);
+  previewImg.src = URL.createObjectURL(file);
+  ensureHiddenWrap(previewWrap, false);
+  syncRemoveButton();
 };
 
 removeImgBtn.onclick = () => {
   setFile(null);
-  previewImg.removeAttribute("src");
+  if (previewImg) previewImg.removeAttribute("src");
   fileInput.value = "";
-  hide(previewWrap);
-  hide(removeImgBtn);
+  ensureHiddenWrap(previewWrap, true);
+  syncRemoveButton();
 };
 
-// ===== keyboard UX =====
-screenGen.addEventListener("pointerdown", (e) => {
-  if (e.target !== promptEl) promptEl?.blur();
-});
-
-promptEl?.addEventListener("focus", () => {
-  setTimeout(() => {
-    promptEl.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, 300);
-});
+// ===== change mode =====
+changeModeBtn.onclick = () => {
+  resetState();
+  if (promptEl) promptEl.value = "";
+  setFile(null);
+  if (previewImg) previewImg.removeAttribute("src");
+  fileInput.value = "";
+  ensureHiddenWrap(previewWrap, true);
+  loadingEl.classList.add("hidden");
+  resetResult();
+  syncRemoveButton();
+  showPick();
+};
 
 // ===== generate =====
 genBtn.onclick = async () => {
-  const modeId = getMode()?.id;
-  const prompt = promptEl.value.trim();
-  const file   = getFile();
+  const m = getMode();
+  const modeId = m?.id || "";
+  if (!modeId) return alert("Сначала выбери функцию");
 
-  if (!modeId) return alert("Выбери функцию");
-  if (modeNeedsFile(modeId) && !file) return alert("Нужно фото");
-  if (modeId === "txt2img" && !prompt) return alert("Напиши описание");
+  const prompt = (promptEl?.value || "").trim();
+  const file = getFile();
+
+  if (modeNeedsFile(modeId) && !file) return alert("Нужно выбрать фото");
+  if (modeId === "txt2img" && !prompt) return alert("Введите описание");
 
   promptEl.blur();
   setGeneratingUI(true);
-
-  let seconds = 20;
-  const eta = loadingEl.querySelector(".genEta");
-  if (eta) eta.textContent = seconds;
-
-  const timer = setInterval(() => {
-    seconds = Math.max(0, seconds - 1);
-    if (eta) eta.textContent = seconds;
-    if (!seconds) clearInterval(timer);
-  }, 1000);
+  genBtn.disabled = true;
 
   try {
     const res = await generateImage({ prompt, mode: modeId, file });
-    clearInterval(timer);
+    const src = res?.image_base64 || res?.image_url || res?.url;
+    if (!src) throw new Error();
 
-    const src = res.image_base64 || res.image_url;
-    if (!src) throw 1;
-
-    hide(loadingEl);
+    loadingEl.classList.add("hidden");
     resultImg.src = src;
-    show(outEl);
-
-    genStage.classList.remove("is-loading");
-    genStage.classList.add("is-result");
+    outEl.classList.remove("hidden");
 
   } catch {
-    clearInterval(timer);
-    alert("Ошибка генерации");
+    loadingEl.classList.add("hidden");
+    resetResult();
     setGeneratingUI(false);
+    alert("Ошибка генерации");
+  } finally {
+    genBtn.disabled = false;
   }
 };
 
-// ===== init =====
 buildModes();
 showPick();
