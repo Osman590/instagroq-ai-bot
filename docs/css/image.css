@@ -52,8 +52,8 @@
   width:100%;
   border-radius:16px;
   padding:12px 14px;
-  border:1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.12);
+  border:1px solid var(--stroke);
+  background: var(--glass2);
   color:#fff;
   font-size:14px;
   resize:none;
@@ -97,33 +97,11 @@
   background: rgba(0,0,0,.15);
 }
 
-/* ===== IMAGE PAGE: фон зависит от темы ===== */
-html[data-theme] body{
-  background: linear-gradient(
-    180deg,
-    var(--bgTop) 0%,
-    var(--bgMid) 55%,
-    var(--bgBot) 100%
-  ) !important;
-  background-image: none !important;
-}
-
-/* убираем псевдо-фон если есть */
-html[data-theme] body::before,
-html[data-theme] body::after{
-  content: none !important;
-  display: none !important;
-}
-
-/* ===== ПАНЕЛЬ ГЕНЕРАЦИИ: тоже зависит от темы ===== */
+/* ✅ ПАНЕЛЬ ГЕНЕРАЦИИ: как в меню (не темним, без "квадрата") */
 #screenGen .card{
-  /* берём средний цвет темы и делаем его "панелью" */
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--bgTop) 70%, #000 30%) 0%,
-    color-mix(in srgb, var(--bgMid) 70%, #000 30%) 100%
-  ) !important;
+  background: var(--glass) !important;
+  border: 1px solid var(--stroke) !important;
 
-  border: 1px solid rgba(255,255,255,.10);
-  box-shadow: 0 14px 30px rgba(0,0,0,.35);
+  /* убираем жесткий "квадрат" */
+  box-shadow: none !important;
 }
