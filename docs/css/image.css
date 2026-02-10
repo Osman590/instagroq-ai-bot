@@ -97,7 +97,7 @@
   background: rgba(0,0,0,.15);
 }
 
-/* ===== IMAGE PAGE: фон зависит от темы (как в остальных вкладках) ===== */
+/* ===== IMAGE PAGE: фон зависит от темы ===== */
 html[data-theme] body{
   background: linear-gradient(
     180deg,
@@ -108,16 +108,22 @@ html[data-theme] body{
   background-image: none !important;
 }
 
-/* если в base.css фон рисуется псевдо-элементами — убираем на этой странице */
+/* убираем псевдо-фон если есть */
 html[data-theme] body::before,
 html[data-theme] body::after{
   content: none !important;
   display: none !important;
 }
 
-/* ===== ЭКРАН ГЕНЕРАЦИИ: панель НЕ прозрачная ===== */
+/* ===== ПАНЕЛЬ ГЕНЕРАЦИИ: тоже зависит от темы ===== */
 #screenGen .card{
-  background: rgba(0,0,0,.35) !important;
+  /* берём средний цвет темы и делаем его "панелью" */
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bgTop) 70%, #000 30%) 0%,
+    color-mix(in srgb, var(--bgMid) 70%, #000 30%) 100%
+  ) !important;
+
   border: 1px solid rgba(255,255,255,.10);
   box-shadow: 0 14px 30px rgba(0,0,0,.35);
 }
