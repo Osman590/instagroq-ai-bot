@@ -6,13 +6,11 @@
   display:block;
 }
 
-/* ✅ ВЕРТИКАЛЬНАЯ ПРОКРУТКА (как на твоём рисунке) */
+/* ✅ ВЕРТИКАЛЬНАЯ ПРОКРУТКА */
 .cardScroll{
   overflow-y:auto;
   overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
-
-  /* чтобы список занимал почти весь экран и скроллился */
   max-height: calc(var(--vh, 100vh) - 140px);
   padding-right: 2px;
 }
@@ -28,7 +26,7 @@
 /* карточка на всю ширину */
 .modeCard{
   width:100%;
-  height:360px;                 /* ✅ длинная карточка */
+  height:360px;
   background:rgba(255,255,255,.12);
   border-radius:22px;
   overflow:hidden;
@@ -39,7 +37,7 @@
 
 /* картинка сверху большая */
 .modeImg{
-  height:220px;                 /* ✅ как в примере */
+  height:220px;
   flex-shrink:0;
 }
 
@@ -71,8 +69,8 @@
 
 /* цена внизу слева */
 .modePrice{
-  margin-top:12px;      /* ⬅️ контролирует высоту зоны */
-  padding-bottom:6px;   /* ⬅️ убираем лишнюю пустоту */
+  margin-top:12px;
+  padding-bottom:6px;
   font-weight:900;
   font-size:18px;
   color:#ffd966;
@@ -84,12 +82,12 @@
 
 /* ===== ЭКРАН ВЫБОРА ФУНКЦИИ: карточки НЕ прозрачные ===== */
 #screenPick .modeCard{
-  background: #0f2746 !important;          /* непрозрачный фон */
+  background: rgba(0,0,0,.35) !important;
   border: 1px solid rgba(255,255,255,.10);
   box-shadow: 0 14px 30px rgba(0,0,0,.35);
 }
 
-/* нижняя часть карточки (описание/цена) тоже не должна "стеклить" */
+/* низ карточки (описание/цена) — фон задаёт сама карточка */
 #screenPick .modeBody{
-  background: transparent !important;       /* фон задаёт сама карточка */
+  background: transparent !important;
 }
