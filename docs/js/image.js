@@ -35,31 +35,3 @@ export const MODES = [
     image: "./assets/modes/E6B3EE8C-A086-4E0A-B939-12D1A52879D1.png",
   },
 ];
-
-let currentMode = null;
-let selectedFile = null;
-
-export function getModes() {
-  return MODES;
-}
-
-export function setMode(id) {
-  currentMode = MODES.find(m => m.id === id) || null;
-}
-
-export function getMode() {
-  return currentMode;
-}
-
-export function setFile(file) {
-  selectedFile = file;
-}
-
-export function getFile() {
-  return selectedFile;
-}
-
-export function resetState() {
-  currentMode = null;
-  selectedFile = null;
-}
