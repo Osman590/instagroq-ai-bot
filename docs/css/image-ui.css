@@ -7,6 +7,23 @@
   display:block;
 }
 
+/* =========================
+   ПЛАВНЫЕ ПЕРЕХОДЫ ЭКРАНОВ
+   ========================= */
+.screen{
+  opacity:0;
+  transform: translateY(18px);
+  pointer-events:none;
+  transition:
+    opacity .45s ease,
+    transform .45s ease;
+}
+.screen.active{
+  opacity:1;
+  transform: translateY(0);
+  pointer-events:auto;
+}
+
 /* вертикальная прокрутка */
 .cardScroll{
   overflow-y:auto;
@@ -23,7 +40,9 @@
   padding-bottom:16px;
 }
 
-/* карточка */
+/* =========================
+   КАРТОЧКИ РЕЖИМОВ
+   ========================= */
 .modeCard{
   width:100%;
   height:360px;
@@ -89,7 +108,9 @@
 .modeImg.loaded img{ opacity:1; }
 .modeImg.error img{ opacity:0; }
 
-/* низ карточки */
+/* =========================
+   НИЗ КАРТОЧКИ
+   ========================= */
 .modeBody{
   padding:16px 16px 18px;
   display:flex;
@@ -168,7 +189,9 @@
 
 .hidden{ display:none; }
 
-/* ОБВОДКА ПОЛЯ ВВОДА (PROMPT) */
+/* =========================
+   ОБВОДКА ПОЛЯ ВВОДА
+   ========================= */
 #prompt,
 textarea {
   border-radius: 14px;
@@ -192,4 +215,62 @@ textarea:focus {
   box-shadow:
     inset 0 0 0 1px rgba(255,255,255,0.08),
     0 0 14px var(--glow);
+}
+
+/* =========================
+   ПАНЕЛЬ ГЕНЕРАЦИИ
+   (ЛОАДЕР → КАРТИНКА)
+   ========================= */
+#genStage{
+  width:100%;
+  aspect-ratio:1/1;
+  border-radius:22px;
+
+  background: rgba(255,255,255,0.10);
+  border:1px solid var(--stroke);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.06),
+    0 0 24px var(--glow);
+
+  transition:
+    opacity .45s ease,
+    transform .45s ease;
+}
+
+/* лоадер внутри */
+.genPanel{
+  text-align:center;
+  color:#fff;
+}
+
+.genSpinner{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:3px solid rgba(255,255,255,.25);
+  border-top-color:#fff;
+  animation: genSpin 1s linear infinite;
+  margin:0 auto 12px;
+}
+
+@keyframes genSpin{
+  to{ transform: rotate(360deg); }
+}
+
+.genText{
+  font-size:15px;
+  opacity:.9;
+}
+
+.genTime{
+  margin-top:6px;
+  font-size:13px;
+  opacity:.7;
 }
