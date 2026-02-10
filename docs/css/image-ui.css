@@ -30,8 +30,13 @@
   overflow:hidden;
   display:flex;
   flex-direction:column;
-  border: 1px solid rgba(255,255,255,.10);
-  box-shadow: 0 14px 30px rgba(0,0,0,.35);
+
+  /* ✅ как в меню: стекло, без затемнения */
+  background: var(--glass) !important;
+  border: 1px solid var(--stroke) !important;
+
+  /* без лишней темной тени */
+  box-shadow: none !important;
 }
 
 /* картинка */
@@ -52,6 +57,7 @@
   flex-direction:column;
   gap:6px;
   flex:1;
+  background: transparent !important; /* фон задаёт карточка */
 }
 
 .modeTitle{
@@ -75,17 +81,4 @@
 
 .hidden{
   display:none;
-}
-
-/* ===== КАРТОЧКИ ВЫБОРА: завязаны на тему ===== */
-#screenPick .modeCard{
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--bgTop) 70%, #000 30%) 0%,
-    color-mix(in srgb, var(--bgMid) 70%, #000 30%) 100%
-  ) !important;
-}
-
-#screenPick .modeBody{
-  background: transparent !important;
 }
