@@ -1,38 +1,14 @@
 # stability_client.py
 import os
-import io
 import base64
 from typing import Optional
 
-# ---------- ENV ----------
+# --- ENV ---
 STABILITY_API_KEY = (os.getenv("STABILITY_API_KEY") or "").strip()
 
-# ---------- Stability Client ----------
-stability_client = None
-stability_engine = "stable-diffusion-xl-1024-v1-0"
+# --- Stability Client ---
+print(f"🔧 STABILITY_API_KEY loaded: {'Yes' if STABILITY_API_KEY else 'No'}")
 
-if STABILITY_API_KEY:
-    try:
-        from stability_sdk import client
-        import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
-        
-        stability_client = client.StabilityInference(
-            key=STABILITY_API_KEY,
-            verbose=False,
-            engine=stability_engine,
-        )
-        print(f"✅ Stability AI client initialized (engine: {stability_engine})")
-    except ImportError:
-        print("⚠️ stability-sdk not installed. Run: pip install stability-sdk")
-        stability_client = None
-    except Exception as e:
-        print(f"⚠️ Stability client init error: {e}")
-        stability_client = None
-else:
-    print("⚠️ STABILITY_API_KEY is not set")
-
-
-# ---------- Image Generation ----------
 def generate_image(
     prompt: str,
     negative_prompt: Optional[str] = None,
@@ -41,57 +17,73 @@ def generate_image(
     width: int = 1024,
     height: int = 1024,
     samples: int = 1,
-) -> Optional[str]:
+) -> str:
     """
-    Генерация изображения через Stability AI.
-    Возвращает base64 строку или None при ошибке.
+    Генерация изображения через Stability AI HTTP API.
+    Возвращает base64 строку.
     """
-    if not stability_client:
-        raise RuntimeError("STABILITY_API_KEY is not set or client not initialized")
+    if not STABILITY_API_KEY:
+        raise RuntimeError("STABILITY_API_KEY is not set")
     
     if not prompt:
         raise ValueError("Prompt is empty")
     
+    # Используем Engine ID для SDXL
+    engine_id = "stable-diffusion-xl-1024-v1-0"
+    url = f"https://api.stability.ai/v1/generation/{engine_id}/text-to-image"
+    
+    headers = {
+        "Authorization": f"Bearer {STABILITY_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    
+    # Подготовка промпта
+    negative_prompt = negative_prompt or "blurry, low quality, distorted, ugly, bad anatomy, watermark, signature"
+    
+    payload = {
+        "text_prompts": [
+            {
+                "text": prompt,
+                "weight": 1.0
+            },
+            {
+                "text": negative_prompt,
+                "weight": -1.0
+            }
+        ],
+        "cfg_scale": cfg_scale,
+        "height": height,
+        "width": width,
+        "samples": samples,
+        "steps": steps,
+    }
+    
     try:
-        # Подготовка промпта
-        negative_prompt = negative_prompt or "blurry, low quality, distorted, ugly, bad anatomy, watermark, signature, text"
+        import requests
+        response = requests.post(url, headers=headers, json=payload, timeout=60)
         
-        print(f"🔄 Generating image: '{prompt[:50]}...' (steps: {steps}, size: {width}x{height})")
+        if response.status_code != 200:
+            error_msg = f"Stability API error {response.status_code}"
+            try:
+                error_data = response.json()
+                error_msg += f": {error_data.get('name', 'Unknown')} - {error_data.get('message', 'No details')}"
+            except:
+                error_msg += f": {response.text[:200]}"
+            raise RuntimeError(error_msg)
         
-        # Генерация
-        answers = stability_client.generate(
-            prompt=prompt,
-            negative_prompt=negative_prompt,
-            steps=steps,
-            cfg_scale=cfg_scale,
-            width=width,
-            height=height,
-            samples=samples,
-            sampler=generation.SAMPLER_K_DPMPP_2M
-        )
+        data = response.json()
         
-        # Обработка ответа
-        image_count = 0
-        for resp in answers:
-            for artifact in resp.artifacts:
-                if artifact.type == generation.ARTIFACT_IMAGE:
-                    img_bytes = artifact.binary
-                    # Конвертируем в base64 для фронтенда
-                    img_base64 = base64.b64encode(img_bytes).decode('utf-8')
-                    image_count += 1
-                    print(f"✅ Image generated successfully ({len(img_bytes)} bytes)")
-                    return f"data:image/png;base64,{img_base64}"
+        if "artifacts" not in data or not data["artifacts"]:
+            raise RuntimeError("No image generated")
         
-        if image_count == 0:
-            print("❌ No images generated - check prompt/content policy")
-            raise RuntimeError("No images generated. Please try a different prompt.")
+        # Берем первую сгенерированную картинку
+        image_base64 = data["artifacts"][0]["base64"]
+        return f"data:image/png;base64,{image_base64}"
         
-        return None
-        
+    except ImportError:
+        raise RuntimeError("requests library is required")
     except Exception as e:
-        print(f"❌ Stability generation error: {type(e).__name__}: {e}")
-        # Пробрасываем оригинальную ошибку для лучшей диагностики
-        raise RuntimeError(f"Stability AI generation failed: {str(e)}") from e
+        raise RuntimeError(f"Image generation failed: {str(e)}")
 
 
 def generate_image_from_image(
@@ -100,12 +92,13 @@ def generate_image_from_image(
     strength: float = 0.7,
     steps: int = 30,
     cfg_scale: float = 7.0,
-) -> Optional[str]:
+) -> str:
     """
     Генерация изображения на основе другого изображения (img2img).
+    Используем image-to-image API.
     """
-    if not stability_client:
-        raise RuntimeError("STABILITY_API_KEY is not set or client not initialized")
+    if not STABILITY_API_KEY:
+        raise RuntimeError("STABILITY_API_KEY is not set")
     
     if not prompt:
         raise ValueError("Prompt is empty")
@@ -113,52 +106,57 @@ def generate_image_from_image(
     if not init_image:
         raise ValueError("Init image is required")
     
+    # Используем Engine ID для SDXL
+    engine_id = "stable-diffusion-xl-1024-v1-0"
+    url = f"https://api.stability.ai/v1/generation/{engine_id}/image-to-image"
+    
+    headers = {
+        "Authorization": f"Bearer {STABILITY_API_KEY}",
+        "Accept": "application/json"
+    }
+    
+    # Подготовка данных
+    files = {
+        "init_image": ("image.png", init_image, "image/png")
+    }
+    
+    data = {
+        "text_prompts[0][text]": prompt,
+        "text_prompts[0][weight]": "1.0",
+        "image_strength": str(strength),
+        "cfg_scale": str(cfg_scale),
+        "steps": str(steps),
+    }
+    
     try:
-        print(f"🔄 Generating image from image: '{prompt[:50]}...' (strength: {strength}, steps: {steps})")
+        import requests
+        response = requests.post(url, headers=headers, files=files, data=data, timeout=90)
         
-        # Генерация с начальным изображением
-        answers = stability_client.generate(
-            prompt=prompt,
-            init_image=init_image,
-            start_schedule=1.0 - strength,  # 1 - strength
-            steps=steps,
-            cfg_scale=cfg_scale,
-            sampler=generation.SAMPLER_K_DPMPP_2M
-        )
+        if response.status_code != 200:
+            error_msg = f"Stability img2img API error {response.status_code}"
+            try:
+                error_data = response.json()
+                error_msg += f": {error_data.get('name', 'Unknown')} - {error_data.get('message', 'No details')}"
+            except:
+                error_msg += f": {response.text[:200]}"
+            raise RuntimeError(error_msg)
         
-        # Обработка ответа
-        image_count = 0
-        for resp in answers:
-            for artifact in resp.artifacts:
-                if artifact.type == generation.ARTIFACT_IMAGE:
-                    img_bytes = artifact.binary
-                    img_base64 = base64.b64encode(img_bytes).decode('utf-8')
-                    image_count += 1
-                    print(f"✅ Image-to-image generated successfully ({len(img_bytes)} bytes)")
-                    return f"data:image/png;base64,{img_base64}"
+        data = response.json()
         
-        if image_count == 0:
-            print("❌ No images generated from input image")
-            raise RuntimeError("No images generated from input image.")
+        if "artifacts" not in data or not data["artifacts"]:
+            raise RuntimeError("No image generated from input")
         
-        return None
+        # Берем первую сгенерированную картинку
+        image_base64 = data["artifacts"][0]["base64"]
+        return f"data:image/png;base64,{image_base64}"
         
+    except ImportError:
+        raise RuntimeError("requests library is required")
     except Exception as e:
-        print(f"❌ Stability img2img error: {type(e).__name__}: {e}")
-        raise RuntimeError(f"Stability AI image-to-image failed: {str(e)}") from e
+        raise RuntimeError(f"Image-to-image generation failed: {str(e)}")
 
 
 # Функция для проверки доступности
 def is_stability_available() -> bool:
     """Проверяет, доступен ли Stability AI клиент."""
-    return stability_client is not None and STABILITY_API_KEY != ""
-
-
-def get_stability_info() -> dict:
-    """Возвращает информацию о настройках Stability AI."""
-    return {
-        "available": is_stability_available(),
-        "engine": stability_engine,
-        "has_api_key": bool(STABILITY_API_KEY),
-        "client_initialized": stability_client is not None,
-    }
+    return bool(STABILITY_API_KEY)
