@@ -11,7 +11,7 @@ export const MODES = [
     title: "Смена стиля",
     desc: "Изменение стиля изображения",
     price: 4,
-    image: "./assets/modes/27C098FB-D965-46E9-8B60-1A21AFE1FE5.png",
+    image: "./assets/modes/27C098FB-D965-46E9-8B60-1A21AFEF1FE5.png",
   },
   {
     id: "remove_bg",
