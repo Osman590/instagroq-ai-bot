@@ -103,21 +103,34 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 
-  /* ✨ чёткая обводка + свечение цветом темы */
-  border-top: 1px solid var(--stroke);
-  border-left: 1px solid var(--stroke);
-  border-right: 1px solid var(--stroke);
-  border-bottom: 1px solid var(--stroke);
+  /* ✅ фикс "дрожания" на iOS: обводку делаем псевдо-слоем, не border'ом */
+  border: none;
+  box-shadow: none;
 
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.05),
-    0 0 12px var(--glow);
+  position: relative;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
 
   justify-content:flex-end;
 
   /* скругление совпадает с карточкой */
   border-bottom-left-radius:22px;
   border-bottom-right-radius:22px;
+}
+
+/* ✅ обводка + свечение без тряски */
+.modeBody::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  border-radius: inherit;
+
+  box-shadow:
+    inset 0 0 0 1px var(--stroke),
+    inset 0 0 0 1px rgba(255,255,255,0.05),
+    0 0 12px var(--glow);
 }
 
 /* текст */
