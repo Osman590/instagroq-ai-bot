@@ -85,26 +85,35 @@
   opacity:0;
 }
 
-/* ✅ НИЗ КАРТОЧКИ — СТЕКЛЯННАЯ ПАНЕЛЬ */
+/* ✅ НИЗ КАРТОЧКИ — ЧЁТКАЯ СТЕКЛЯННАЯ ПАНЕЛЬ */
 .modeBody{
   padding:16px 16px 18px;
   display:flex;
   flex-direction:column;
   gap:6px;
-  flex:1;
 
-  /* стеклянный фон снизу */
-  background: linear-gradient(
-    to top,
-    rgba(0,0,0,.55),
-    rgba(0,0,0,.28) 65%,
-    rgba(0,0,0,0)
-  );
+  /* ❌ убираем пустоту */
+  flex:none;
+  margin-top:-1px;
 
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  /* стеклянный плотный фон */
+  background: rgba(10, 28, 32, 0.72);
+
+  /* блюр */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  /* чёткий край + лёгкое свечение */
+  border-top: 1px solid rgba(255,255,255,.28);
+  box-shadow:
+    0 -1px 0 rgba(255,255,255,.25),
+    0 -6px 18px rgba(80,200,180,.22);
 
   justify-content:flex-end;
+
+  /* скругление совпадает с карточкой */
+  border-bottom-left-radius:22px;
+  border-bottom-right-radius:22px;
 }
 
 /* текст */
