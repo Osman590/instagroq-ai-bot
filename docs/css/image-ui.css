@@ -1,3 +1,4 @@
+/* docs/css/image-ui.css */
 .screen{
   display:none;
   padding:16px;
@@ -43,11 +44,50 @@
 .modeImg{
   height:220px;
   flex-shrink:0;
+  position: relative; /* ✅ для лоадера */
 }
+
+/* ✅ ЛОАДЕР (пока картинка не загрузилась) */
+.imgLoader{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(255,255,255,.06);
+}
+.imgLoader::before{
+  content:"";
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  border:3px solid rgba(255,255,255,.22);
+  border-top-color: rgba(255,255,255,.75);
+  animation: imgSpin 0.9s linear infinite;
+}
+@keyframes imgSpin{
+  to{ transform: rotate(360deg); }
+}
+
 .modeImg img{
   width:100%;
   height:100%;
   object-fit:cover;
+  opacity:0;                 /* ✅ прячем пока грузится */
+  transition: opacity .18s ease;
+}
+
+/* ✅ когда загрузилось */
+.modeImg.loaded .imgLoader{
+  display:none;
+}
+.modeImg.loaded img{
+  opacity:1;
+}
+
+/* ✅ если ошибка загрузки — оставляем лоадер (можно потом заменить на заглушку) */
+.modeImg.error img{
+  opacity:0;
 }
 
 /* низ карточки */
