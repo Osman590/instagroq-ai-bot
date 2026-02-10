@@ -85,29 +85,33 @@
   opacity:0;
 }
 
-/* ✅ НИЗ КАРТОЧКИ — ЧЁТКАЯ СТЕКЛЯННАЯ ПАНЕЛЬ */
+/* ✅ НИЗ КАРТОЧКИ — СВЕТЛАЯ СТЕКЛЯННАЯ ПАНЕЛЬ С ПОДСВЕТКОЙ */
 .modeBody{
   padding:16px 16px 18px;
   display:flex;
   flex-direction:column;
   gap:6px;
 
-  /* ❌ убираем пустоту */
+  /* ❌ убираем пустое место */
   flex:none;
   margin-top:-1px;
 
-  /* стеклянный плотный фон */
-  background: rgba(10, 28, 32, 0.72);
+  /* 🌫 светлее фон панели */
+  background: rgba(255,255,255,0.12);
 
-  /* блюр */
+  /* 🧊 блюр */
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 
-  /* чёткий край + лёгкое свечение */
-  border-top: 1px solid rgba(255,255,255,.28);
+  /* ✨ чёткая обводка + свечение цветом темы */
+  border-top: 1px solid var(--stroke);
+  border-left: 1px solid var(--stroke);
+  border-right: 1px solid var(--stroke);
+  border-bottom: 1px solid var(--stroke);
+
   box-shadow:
-    0 -1px 0 rgba(255,255,255,.25),
-    0 -6px 18px rgba(80,200,180,.22);
+    inset 0 0 0 1px rgba(255,255,255,0.05),
+    0 0 12px var(--glow);
 
   justify-content:flex-end;
 
