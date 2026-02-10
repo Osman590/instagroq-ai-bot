@@ -48,28 +48,47 @@ function showGen(){
 }
 
 function modeNeedsFile(modeId){
-  // txt2img — без фото, всё остальное требует входную картинку
   return modeId !== "txt2img";
+}
+
+/* ✅ ГЛАВНАЯ ЛОГИКА КНОПКИ "УДАЛИТЬ" */
+function syncRemoveButton(){
+  const mode = getMode();
+  const modeId = mode?.id || "";
+  const file = getFile();
+
+  // txt2img — кнопки нет вообще
+  if (modeId === "txt2img") {
+    removeImgBtn.classList.add("hidden");
+    return;
+  }
+
+  // остальные режимы — только если есть файл
+  if (file) {
+    removeImgBtn.classList.remove("hidden");
+  } else {
+    removeImgBtn.classList.add("hidden");
+  }
 }
 
 function syncGenUIForMode(){
   const m = getMode();
   const modeId = m?.id || "";
 
-  // показать/скрыть выбор фото по режиму
   const needFile = modeNeedsFile(modeId);
   pickFileBtn.style.display = needFile ? "" : "none";
+
   if (!needFile) {
-    // если режим без фото — сбрасываем выбранный файл и превью
     setFile(null);
     previewWrap.classList.add("hidden");
     fileInput.value = "";
   }
 
-  // сброс результата при переключении режима
   loadingEl.classList.add("hidden");
   outEl.classList.add("hidden");
   if (resultImg) resultImg.removeAttribute("src");
+
+  syncRemoveButton();
 }
 
 function buildModes(){
@@ -92,7 +111,7 @@ function buildModes(){
     `;
 
     const imgWrap = card.querySelector(".modeImg");
-    const img = card.querySelector(".modeImg img");
+    const img = card.querySelector("img");
 
     const markLoaded = () => imgWrap.classList.add("loaded");
     const markError = () => imgWrap.classList.add("error");
@@ -124,17 +143,18 @@ fileInput.onchange = () => {
   setFile(file);
   previewImg.src = URL.createObjectURL(file);
   previewWrap.classList.remove("hidden");
+  syncRemoveButton();
 };
 
 removeImgBtn.onclick = () => {
   setFile(null);
   previewWrap.classList.add("hidden");
   fileInput.value = "";
+  syncRemoveButton();
 };
 
 changeModeBtn.onclick = () => {
   resetState();
-  // сброс UI
   promptEl.value = "";
   setFile(null);
   previewWrap.classList.add("hidden");
@@ -156,7 +176,6 @@ genBtn.onclick = async () => {
   const prompt = (promptEl?.value || "").trim();
   const file = getFile();
 
-  // проверки по режимам
   if (modeNeedsFile(modeId) && !file) {
     alert("Для этой функции нужно выбрать фото");
     return;
@@ -166,28 +185,19 @@ genBtn.onclick = async () => {
     return;
   }
 
-  // UI состояние
   loadingEl.classList.remove("hidden");
   outEl.classList.add("hidden");
   genBtn.disabled = true;
 
   try {
     const res = await generateImage({ prompt, mode: modeId, file });
-
-    // ожидаем один из вариантов:
-    // { image_url: "https://..." }  или  { image_base64: "data:image/png;base64,..." }
-    const url = res?.image_url || res?.url || "";
-    const b64 = res?.image_base64 || res?.base64 || "";
-
-    const src = b64 || url;
-    if (!src) {
-      throw new Error("no_image_in_response");
-    }
+    const src = res?.image_base64 || res?.image_url || res?.url || "";
+    if (!src) throw new Error("no_image");
 
     resultImg.src = src;
     loadingEl.classList.add("hidden");
     outEl.classList.remove("hidden");
-  } catch (e) {
+  } catch {
     loadingEl.classList.add("hidden");
     outEl.classList.add("hidden");
     alert("Ошибка генерации");
