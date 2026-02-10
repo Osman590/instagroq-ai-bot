@@ -1,3 +1,4 @@
+// docs/js/image-page.js
 import { getModes, setMode, getMode, setFile, getFile, resetState } from "./image.js";
 
 const tg = window.Telegram?.WebApp;
@@ -49,7 +50,8 @@ function buildModes(){
 
     card.innerHTML = `
       <div class="modeImg">
-        <img src="${m.image}">
+        <div class="imgLoader" aria-hidden="true"></div>
+        <img src="${m.image}" alt="">
       </div>
       <div class="modeBody">
         <div class="modeTitle">${m.title}</div>
@@ -57,6 +59,27 @@ function buildModes(){
         <div class="modePrice">${m.price} ⭐</div>
       </div>
     `;
+
+    // ✅ loader -> показываем, пока конкретная картинка не загрузится
+    const imgWrap = card.querySelector(".modeImg");
+    const img = card.querySelector(".modeImg img");
+
+    const markLoaded = () => {
+      imgWrap.classList.add("loaded");
+    };
+
+    const markError = () => {
+      imgWrap.classList.add("error");
+    };
+
+    img.addEventListener("load", markLoaded, { once: true });
+    img.addEventListener("error", markError, { once: true });
+
+    // если картинка уже в кэше
+    if (img.complete) {
+      if (img.naturalWidth > 0) markLoaded();
+      else markError();
+    }
 
     card.onclick = () => {
       setMode(m.id);
